@@ -39,15 +39,28 @@ void TCPRelayApp::initialize(int stage)
         delay = par("echoDelay");
         echoFactor = par("echoFactor");
 
+        reverse = par("reverse");
+        if(!reverse) {
+            inGate = inGateName;
+            outGate = outGateName;
+            inGate2 = inGate2Name;
+            outGate2 = outGate2Name;
+        } else {
+            inGate = inGate2Name;
+            outGate = outGate2Name;
+            inGate2 = inGateName;
+            outGate2 = outGateName;
+        }
+
         bytesRcvd = bytesSent = 0;
         WATCH(bytesRcvd);
         WATCH(bytesSent);
 
-        socket.setOutputGate(gate("tcpOut"));
+        socket.setOutputGate(gate(outGate)); //"tcpOut"
         socket.readDataTransferModePar(*this);
 
-        socket2.setOutputGate(gate("tcp2Out"));
-        socket2.readDataTransferModePar(*this);
+//        socket2.setOutputGate(gate("tcp2Out"));
+//        socket2.readDataTransferModePar(*this);
 
         nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
     }
@@ -61,7 +74,7 @@ void TCPRelayApp::initialize(int stage)
         ssocket.readDataTransferModePar(*this);
         ssocket.bind(*localAddress ? IPvXAddressResolver().resolve(localAddress) : IPvXAddress(), localPort);
         ssocket.setCallbackObject(this);
-        ssocket.setOutputGate(gate("tcp2Out"));
+        ssocket.setOutputGate(gate(outGate2)); //"tcp2Out"
         // we need a new connId if this is not the first connection
         ssocket.renewSocket();
 
@@ -108,9 +121,9 @@ void TCPRelayApp::startListening()
 void TCPRelayApp::stopListening()
 {
     socket.close();
-    socket2.close();
+//    socket2.close();
     ssocket.close();
-    ssocket2.close();
+//    ssocket2.close();
 }
 
 void TCPRelayApp::sendDown(cMessage *msg)
@@ -132,7 +145,7 @@ void TCPRelayApp::sendDown(cMessage *msg)
 //    else if(agate == "tcpIn")
 //        send(msg, "tcpOut");
 
-    if(agate == "tcpIn") {
+    if(agate == inGate) { //"tcpIn"
         if((msg->getControlInfo() != NULL))
             msg->removeControlInfo();
         ssocket.send(msg);

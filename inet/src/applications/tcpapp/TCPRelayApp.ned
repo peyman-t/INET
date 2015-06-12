@@ -71,6 +71,7 @@ simple TCPRelayApp like ITCPApp
         string remoteAddress = default(""); // remote address; may be left empty ("")
         int remotePort; // port number to connect to
         double echoFactor = default(1);
+        bool reverse = default(false);
         double echoDelay @unit(s) = default(0s);
         string dataTransferMode @enum("bytecount","object","bytestream") = default("bytecount");
         @display("i=block/app");

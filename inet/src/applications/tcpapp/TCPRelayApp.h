@@ -25,6 +25,13 @@
  * Accepts any number of incoming connections, and sends back whatever
  * arrives on them.
  */
+
+char * inGateName = "tcpIn";
+char * inGate2Name = "tcp2In";
+
+char * outGateName = "tcpOut";
+char * outGate2Name = "tcp2Out";
+
 class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCPSocket::CallbackInterface
 {
   protected:
@@ -39,6 +46,10 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
 
     long bytesRcvd;
     long bytesSent;
+
+    bool reverse;
+
+    char *inGate, *outGate, *inGate2, *outGate2;
 
     static simsignal_t rcvdPkSignal;
     static simsignal_t sentPkSignal;

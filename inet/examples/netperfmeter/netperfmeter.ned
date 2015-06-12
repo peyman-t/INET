@@ -49,8 +49,8 @@ module REDQueue like IOutputQueue
       red: REDDropper {
          numGates = 1;
          wq = default(0.002);
-         minths = default("30");
-         maxths = default("90");
+         minths = default("10");
+         maxths = default("40");
          maxps = default("0.10");
          pkrates = default("8333.333");
       }
