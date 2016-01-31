@@ -158,6 +158,8 @@ packet TCPSegment
     bool rstBit; // RST: reset the connection
     bool synBit; // SYN: synchronize seq. numbers
     bool finBit; // FIN: finish - no more data from sender
+	bool ecnBit; // ECN
+	bool eceBit; // ECN echo
 
     // Window Size: the number of data octets beginning with the one indicated
     // in the acknowledgement field which the sender of this segment is

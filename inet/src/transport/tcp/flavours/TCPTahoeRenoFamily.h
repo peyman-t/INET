@@ -34,6 +34,20 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     virtual std::string detailedInfo() const;
 
     uint32 ssthresh;  ///< slow start threshold
+
+    //DCTCP
+    double dctcp_marked;
+    double dctcp_total;
+    double dctcp_alpha;
+    simtime_t dctcp_lastCalcTime;
+    double dctcp_gamma;
+
+    //LGCC
+    double lgcc_rate;
+    double lgcc_maxWin;
+    double lgcc_load;
+    double lgcc_gamma;
+    double lgcc_r;
 };
 
 

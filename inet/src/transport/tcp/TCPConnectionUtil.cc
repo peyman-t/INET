@@ -641,6 +641,27 @@ void TCPConnection::sendAck()
     tcpAlgorithm->ackSent();
 }
 
+void TCPConnection::sendAck(bool ecn)
+{
+    TCPSegment *tcpseg = createTCPSegment("ACK");
+
+    tcpseg->setAckBit(true);
+    tcpseg->setSequenceNo(state->snd_nxt);
+    tcpseg->setAckNo(state->rcv_nxt);
+    tcpseg->setWindow(updateRcvWnd());
+
+    // write header options
+    writeHeaderOptions(tcpseg);
+    if(ecn)
+        tcpseg->setEceBit(ecn);
+
+    // send it
+    sendToIP(tcpseg);
+
+    // notify
+    tcpAlgorithm->ackSent();
+}
+
 void TCPConnection::sendFin()
 {
     TCPSegment *tcpseg = createTCPSegment("FIN");

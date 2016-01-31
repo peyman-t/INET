@@ -103,55 +103,122 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
     }
     else
     {
-        //
-        // Perform slow start and congestion avoidance.
-        //
-        if (state->snd_cwnd < state->ssthresh)
-        {
-            tcpEV << "cwnd <= ssthresh: Slow Start: increasing cwnd by one SMSS bytes to ";
+//---------------LGCC
 
-            // perform Slow Start. RFC 2581: "During slow start, a TCP increments cwnd
-            // by at most SMSS bytes for each ACK received that acknowledges new data."
-            state->snd_cwnd += state->snd_mss;
+//        state->dctcp_total++;
+//        if(state->ece) {
+//            state->dctcp_marked++;
+//
+//            if(state->dctcp_marked == 1) {
+//                state->lgcc_load = 1;
+//                state->lgcc_rate = state->snd_cwnd / state->lgcc_maxWin;
+//            } else
+//                state->lgcc_load = (1 - state->lgcc_gamma) * state->lgcc_load + state->lgcc_gamma * 1;
+//
+//            state->ece = false;
+//        } else {
+//            state->lgcc_load = (1 - state->lgcc_gamma) * state->lgcc_load + state->lgcc_gamma * 0;
+//        }
+//
+//        simtime_t now = simTime();
+//        if( state->dctcp_marked > 0) {//now - state->dctcp_lastCalcTime >= 1 * 0.048 &&
+//            state->dctcp_lastCalcTime = now;
+//
+//            state->lgcc_rate = state->lgcc_rate + state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load);
+//
+//            uint32 newCwnd = state->lgcc_rate * state->lgcc_maxWin;
+////            if(state->snd_cwnd + 2 * state->snd_mss < newCwnd) {
+////                newCwnd = state->snd_cwnd + 2 * state->snd_mss;
+////            } else
+//            if(newCwnd < 2 * state->snd_mss) {
+//                if(newCwnd * 1.5 < 2 * state->snd_mss)
+//                    newCwnd *= 1.5;
+//                else
+//                    newCwnd = 2 * state->snd_mss;
+//                state->lgcc_rate = newCwnd / state->lgcc_maxWin;
+//            }
+//            state->snd_cwnd = newCwnd;
+//
+//            if (cwndVector)
+//                cwndVector->record(state->snd_cwnd);
+//        }
 
-            // Note: we could increase cwnd based on the number of bytes being
-            // acknowledged by each arriving ACK, rather than by the number of ACKs
-            // that arrive. This is called "Appropriate Byte Counting" (ABC) and is
-            // described in RFC 3465. This RFC is experimental and probably not
-            // implemented in real-life TCPs, hence it's commented out. Also, the ABC
-            // RFC would require other modifications as well in addition to the
-            // two lines below.
-            //
-            // int bytesAcked = state->snd_una - firstSeqAcked;
-            // state->snd_cwnd += bytesAcked * state->snd_mss;
+//------------------DCTCP
+
+        state->dctcp_total++;
+        if(state->ece)
+            state->dctcp_marked++;
+        simtime_t now = simTime();
+        if(now - state->dctcp_lastCalcTime >= state->srtt && state->dctcp_marked) {
+            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_marked / state->dctcp_total);
+
+            state->dctcp_lastCalcTime = now;
+            state->dctcp_marked = 0;
+            state->dctcp_total = 0;
+
+//            state->snd_cwnd = state->snd_cwnd + state->snd_mss * state->snd_mss * (1 / state->snd_cwnd) - state->snd_mss * (state->dctcp_alpha / 2);
+            state->snd_cwnd = state->snd_cwnd * (1 - state->dctcp_alpha / 2);
+
+            uint32 flight_size = std::min(state->snd_cwnd, state->snd_wnd); // FIXME TODO - Does this formula computes the amount of outstanding data?
+            state->ssthresh = std::max(3 * flight_size / 4, 2 * state->snd_mss);
 
             if (cwndVector)
                 cwndVector->record(state->snd_cwnd);
+        } else {
 
-            tcpEV << "cwnd=" << state->snd_cwnd << "\n";
-        }
-        else
-        {
-            // perform Congestion Avoidance (RFC 2581)
-            uint32 incr = state->snd_mss * state->snd_mss / state->snd_cwnd;
-
-            if (incr == 0)
-                incr = 1;
-
-            state->snd_cwnd += incr;
-
-            if (cwndVector)
-                cwndVector->record(state->snd_cwnd);
+//LGCC
+//            if(state->dctcp_marked == 0) {
 
             //
-            // Note: some implementations use extra additive constant mss / 8 here
-            // which is known to be incorrect (RFC 2581 p5)
+            // Perform slow start and congestion avoidance.
             //
-            // Note 2: RFC 3465 (experimental) "Appropriate Byte Counting" (ABC)
-            // would require maintaining a bytes_acked variable here which we don't do
-            //
+            if (state->snd_cwnd < state->ssthresh)
+            {
+                tcpEV << "cwnd <= ssthresh: Slow Start: increasing cwnd by one SMSS bytes to ";
 
-            tcpEV << "cwnd > ssthresh: Congestion Avoidance: increasing cwnd linearly, to " << state->snd_cwnd << "\n";
+                // perform Slow Start. RFC 2581: "During slow start, a TCP increments cwnd
+                // by at most SMSS bytes for each ACK received that acknowledges new data."
+                state->snd_cwnd += state->snd_mss;
+
+                // Note: we could increase cwnd based on the number of bytes being
+                // acknowledged by each arriving ACK, rather than by the number of ACKs
+                // that arrive. This is called "Appropriate Byte Counting" (ABC) and is
+                // described in RFC 3465. This RFC is experimental and probably not
+                // implemented in real-life TCPs, hence it's commented out. Also, the ABC
+                // RFC would require other modifications as well in addition to the
+                // two lines below.
+                //
+                // int bytesAcked = state->snd_una - firstSeqAcked;
+                // state->snd_cwnd += bytesAcked * state->snd_mss;
+
+                if (cwndVector)
+                    cwndVector->record(state->snd_cwnd);
+
+                tcpEV << "cwnd=" << state->snd_cwnd << "\n";
+            }
+            else
+            {
+                // perform Congestion Avoidance (RFC 2581)
+                uint32 incr = state->snd_mss * state->snd_mss / state->snd_cwnd;
+
+                if (incr == 0)
+                    incr = 1;
+
+                state->snd_cwnd += incr;
+
+                if (cwndVector)
+                    cwndVector->record(state->snd_cwnd);
+
+                //
+                // Note: some implementations use extra additive constant mss / 8 here
+                // which is known to be incorrect (RFC 2581 p5)
+                //
+                // Note 2: RFC 3465 (experimental) "Appropriate Byte Counting" (ABC)
+                // would require maintaining a bytes_acked variable here which we don't do
+                //
+
+                tcpEV << "cwnd > ssthresh: Congestion Avoidance: increasing cwnd linearly, to " << state->snd_cwnd << "\n";
+            }
         }
     }
 

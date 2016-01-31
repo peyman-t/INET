@@ -21,6 +21,8 @@
 
 #include "REDDropper.h"
 #include "opp_utils.h"
+#include "IPv4Datagram.h"
+
 
 Define_Module(REDDropper);
 
@@ -31,6 +33,7 @@ REDDropper::~REDDropper()
     delete[] maxps;
     delete[] pkrates;
     delete[] count;
+    delete[] marks;
     q_time = 0;
 }
 
@@ -47,11 +50,13 @@ void REDDropper::initialize()
     maxps = new double[numGates];
     pkrates = new double[numGates];
     count = new double[numGates];
+    marks = new double[numGates];
 
     cStringTokenizer minthTokens(par("minths"));
     cStringTokenizer maxthTokens(par("maxths"));
     cStringTokenizer maxpTokens(par("maxps"));
     cStringTokenizer pkrateTokens(par("pkrates"));
+    cStringTokenizer markTokens(par("marks"));
     for (int i = 0; i < numGates; ++i)
     {
         minths[i] = minthTokens.hasMoreTokens() ? OPP_Global::atod(minthTokens.nextToken()) :
@@ -62,6 +67,8 @@ void REDDropper::initialize()
                    (i > 0 ? maxps[i-1] : 0.02);
         pkrates[i] = pkrateTokens.hasMoreTokens() ? OPP_Global::atod(pkrateTokens.nextToken()) :
                     (i > 0 ? pkrates[i-1] : 150);
+        marks[i] = markTokens.hasMoreTokens() ? OPP_Global::atod(markTokens.nextToken()) :
+                    (i > 0 ? marks[i-1] : 0);
         count[i] = -1;
 
         if (minths[i] < 0.0)
@@ -74,7 +81,15 @@ void REDDropper::initialize()
             throw cRuntimeError("Invalid value for maxp parameter: %g", maxps[i]);
         if (pkrates[i] < 0.0)
             throw cRuntimeError("Invalid value for pkrates parameter: %g", pkrates[i]);
+        if (marks[i] != 0 && marks[i] != 1)
+            throw cRuntimeError("Invalid value for marks parameter: %g", marks[i]);
     }
+}
+
+void REDDropper::markECN(cPacket *packet)
+{
+    IPv4Datagram * ipPacket = check_and_cast<IPv4Datagram*>(packet);
+    ipPacket->setExplicitCongestionNotification(3);
 }
 
 bool REDDropper::shouldDrop(cPacket *packet)
@@ -85,6 +100,7 @@ bool REDDropper::shouldDrop(cPacket *packet)
     const double maxth = maxths[i];
     const double maxp = maxps[i];
     const double pkrate = pkrates[i];
+    const double mark = marks[i];
     const int queueLength = getLength();
 
     if (queueLength > 0)
@@ -108,20 +124,29 @@ bool REDDropper::shouldDrop(cPacket *packet)
         {
             EV << "Random early packet drop (avg queue len=" << avg << ", pa=" << pb << ")\n";
             count[i] = 0;
-            return true;
+            if(!mark)
+                return true;
+            else
+                markECN(packet);
         }
     }
     else if (avg >= maxth)
     {
         EV << "Avg queue len " << avg << " >= maxth, dropping packet.\n";
         count[i] = 0;
-        return true;
-    }
+        if(!mark)
+            return true;
+        else
+            markECN(packet);
+}
     else if (queueLength >= maxth)  // maxth is also the "hard" limit
     {
         EV << "Queue len " << queueLength << " >= maxth, dropping packet.\n";
         count[i] = 0;
-        return true;
+        if(!mark)
+            return true;
+        else
+            markECN(packet);
     }
     else
     {

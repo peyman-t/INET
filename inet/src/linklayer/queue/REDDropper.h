@@ -35,12 +35,15 @@ class REDDropper : public AlgorithmicDropperBase
     double *maxps;
     double *pkrates;
     double *count;
+    double *marks;
 
     double avg;
     simtime_t q_time;
 
   public:
     REDDropper() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0) {}
+
+    void markECN(cPacket *packet);
   protected:
     virtual ~REDDropper();
     virtual void initialize();

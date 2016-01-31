@@ -267,6 +267,9 @@ class INET_API TCPStateVariables : public cObject
     uint32 usedRcvBuffer;    // current amount of used bytes in tcp receive queue
     uint32 freeRcvBuffer;    // current amount of free bytes in tcp receive queue
     uint32 tcpRcvQueueDrops; // number of drops in tcp receive queue
+
+    bool ecn;
+    bool ece;
 };
 
 
@@ -477,6 +480,7 @@ class INET_API TCPConnection
   public:
     /** Utility: send ACK */
     virtual void sendAck();
+    virtual void sendAck(bool ecn);
 
     /**
      * Utility: Send data from sendQueue, at most congestionWindow.

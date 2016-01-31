@@ -23,6 +23,18 @@
 TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
 {
     ssthresh = 65535;
+
+    dctcp_alpha = 0;
+    dctcp_gamma = 0.05;
+    dctcp_lastCalcTime = 0;
+    dctcp_marked = 0;
+    dctcp_total = 0;
+
+    lgcc_rate = 0;
+    lgcc_maxWin = 60000;
+    lgcc_load = 0;
+    lgcc_gamma = 0.001;
+    lgcc_r = 0.5;
 }
 
 std::string TCPTahoeRenoFamilyStateVariables::info() const

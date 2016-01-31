@@ -522,7 +522,7 @@ void TCPBaseAlg::receiveSeqChanged()
         if (!state->delayed_acks_enabled) // delayed ACK disabled
         {
             tcpEV << "rcv_nxt changed to " << state->rcv_nxt << ", (delayed ACK disabled) sending ACK now\n";
-            conn->sendAck();
+            conn->sendAck(state->ecn);
         }
         else // delayed ACK enabled
         {

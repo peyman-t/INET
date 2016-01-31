@@ -166,6 +166,7 @@ void TCP::handleMessage(cMessage *msg)
                 IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->removeControlInfo();
                 srcAddr = controlInfo->getSrcAddr();
                 destAddr = controlInfo->getDestAddr();
+                tcpseg->setEcnBit(controlInfo->getExplicitCongestionNotification());
                 delete controlInfo;
             }
             else if (dynamic_cast<IPv6ControlInfo *>(tcpseg->getControlInfo()) != NULL)
@@ -173,6 +174,7 @@ void TCP::handleMessage(cMessage *msg)
                 IPv6ControlInfo *controlInfo = (IPv6ControlInfo *)tcpseg->removeControlInfo();
                 srcAddr = controlInfo->getSrcAddr();
                 destAddr = controlInfo->getDestAddr();
+                tcpseg->setEcnBit(controlInfo->getExplicitCongestionNotification());
                 delete controlInfo;
             }
             else
@@ -184,6 +186,7 @@ void TCP::handleMessage(cMessage *msg)
             TCPConnection *conn = findConnForSegment(tcpseg, srcAddr, destAddr);
             if (conn)
             {
+                conn->getState()->ecn = tcpseg->getEcnBit();
                 bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                 if (!ret)
                     removeConnection(conn);

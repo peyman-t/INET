@@ -19,16 +19,9 @@ import inet.linklayer.queue.REDDropper;
 network DCTCPIncast
 {
     parameters:
-        @display("bgb=637,253");
+        @display("bgb=637,580");
         double ldelay @unit(s) = default(0.1s);
     types:
-        channel SlowP extends DatarateChannel
-        {
-            parameters:
-                datarate = 2Mbps;
-                per = 0;
-                ber = 0;
-        }
         channel NormalP extends DatarateChannel
         {
             parameters:
@@ -36,65 +29,118 @@ network DCTCPIncast
                 per = 0;
                 ber = 0;
         }
-        channel HighSpeedP extends DatarateChannel
-        {
-            parameters:
-                datarate = 20Mbps;
-                per = 0;
-                ber = 0;
-        }
+        
 
     submodules:
         routerCore: SplitTCPRouter {
             parameters:
-                @display("p=291,147;i=abstract/router");
+                @display("p=315,141;i=abstract/router");
         }
         client11: StandardHost2 {
             parameters:
                 @display("p=50,100");
         }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=50,176");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=32,239");
+        }
+        client14: StandardHost2 {
+            parameters:
+                @display("p=38,307");
+        }
+        client15: StandardHost2 {
+            parameters:
+                @display("p=44,386");
+        }
+        client16: StandardHost2 {
+            parameters:
+                @display("p=106,425");
+        }
+        client17: StandardHost2 {
+            parameters:
+                @display("p=172,425");
+        }
+        client18: StandardHost2 {
+            parameters:
+                @display("p=250,416");
+        }
+        client19: StandardHost2 {
+            parameters:
+                @display("p=331,425");
+        }
+        client110: StandardHost2 {
+            parameters:
+                @display("p=370,503");
+        }
+        client111: StandardHost2 {
+            parameters:
+                @display("p=411,531");
+        }
+        client112: StandardHost2 {
+            parameters:
+                @display("p=450,464");
+        }
+        client113: StandardHost2 {
+            parameters:
+                @display("p=463,404");
+        }
+        client114: StandardHost2 {
+            parameters:
+                @display("p=541,455");
+        }
+        client115: StandardHost2 {
+            parameters:
+                @display("p=598,443");
+        }
+        client116: StandardHost2 {
+            parameters:
+                @display("p=598,377");
+        }
+        client117: StandardHost2 {
+            parameters:
+                @display("p=591,307");
+        }
+        client118: StandardHost2 {
+            parameters:
+                @display("p=591,245");
+        }
+        client119: StandardHost2 {
+            parameters:
+                @display("p=591,176");
+        }
+        client120: StandardHost2 {
+            parameters:
+                @display("p=580,119");
+        }
         configurator: IPv4NetworkConfigurator;
         client21: StandardHost2 {
             parameters:
-                @display("p=581,100");
+                @display("p=392,38");
         }
     connections:
         routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client11.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client12.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client13.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client14.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client15.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client16.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client17.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client18.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client19.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client110.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client111.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client112.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client113.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client114.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client115.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client116.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client117.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client118.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client119.pppg++;
+        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client120.pppg++;
         routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client21.pppg++;
-}
-
-channel NormalPath extends DatarateChannel
-{
-    parameters:
-        datarate = 10Mbps;
-        delay = 25ms; // 10m
-        per = 0;
-        ber = 0;
-}
-
-channel HighSpeedPath extends DatarateChannel
-{
-    parameters:
-        datarate = 20Mbps;
-        delay = 25ms; // 10m
-        per = 0;
-        ber = 0;
-}
-
-channel SlowPath extends DatarateChannel
-{
-    parameters:
-        datarate = 2Mbps;
-        delay = 25ms; // 10m
-        per = 0;
-        ber = 0;
-}
-
-channel ErroneousPath extends DatarateChannel
-{
-    parameters:
-        datarate = 1Mbps;
-        delay = 100ms; // 10m
-        per = 0.00;
-        ber = 0.000001;
 }

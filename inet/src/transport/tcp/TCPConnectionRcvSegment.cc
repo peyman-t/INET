@@ -224,7 +224,7 @@ TCPEventCode TCPConnection::processSegment1stThru8th(TCPSegment *tcpseg)
             // SACK option."
             //
             // The received segment is not "valid" therefore the ACK will not bear a SACK option, if snd_dsack (D-SACK) is not set.
-            sendAck();
+            sendAck(tcpseg->getEcnBit());
         }
 
         state->rcv_naseg++;
@@ -1277,6 +1277,7 @@ bool TCPConnection::processAckInEstabEtc(TCPSegment *tcpseg)
     //"
     // Note: should use SND.MAX instead of SND.NXT in above checks
     //
+
     if (seqGE(state->snd_una, tcpseg->getAckNo()))
     {
         //
@@ -1373,6 +1374,7 @@ bool TCPConnection::processAckInEstabEtc(TCPSegment *tcpseg)
         if (tcpseg->getPayloadLength() == 0 && fsm.getState() != TCP_S_SYN_RCVD)
         {
             // notify
+            tcpAlgorithm->getStateVariables()->ece = tcpseg->getEceBit();
             tcpAlgorithm->receivedDataAck(old_snd_una);
 
             // in the receivedDataAck we need the old value
