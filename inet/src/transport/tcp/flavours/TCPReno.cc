@@ -149,14 +149,21 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
         if(state->ece)
             state->dctcp_marked++;
         simtime_t now = simTime();
-        if(now - state->dctcp_lastCalcTime >= state->srtt && state->dctcp_marked) {
+        bool cut = false;
+
+        if(now - state->dctcp_lastCalcTime >= state->srtt) {
             state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_marked / state->dctcp_total);
+
+            if(state->dctcp_marked)
+                cut = true;
 
             state->dctcp_lastCalcTime = now;
             state->dctcp_marked = 0;
             state->dctcp_total = 0;
 
-//            state->snd_cwnd = state->snd_cwnd + state->snd_mss * state->snd_mss * (1 / state->snd_cwnd) - state->snd_mss * (state->dctcp_alpha / 2);
+        }
+
+        if(cut) {
             state->snd_cwnd = state->snd_cwnd * (1 - state->dctcp_alpha / 2);
 
             uint32 flight_size = std::min(state->snd_cwnd, state->snd_wnd); // FIXME TODO - Does this formula computes the amount of outstanding data?

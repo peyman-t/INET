@@ -20,12 +20,13 @@ network DCTCPIncast
 {
     parameters:
         @display("bgb=637,580");
-        double ldelay @unit(s) = default(0.1s);
-    types:
+//        double ldelay @unit(s) = default(0.1s);
+//        double ldatarate @unit(Mbps) = default(10Mbps);
+        types:
         channel NormalP extends DatarateChannel
         {
             parameters:
-                datarate = 10Mbps;
+//                datarate = ldatarate;
                 per = 0;
                 ber = 0;
         }
@@ -122,25 +123,25 @@ network DCTCPIncast
                 @display("p=392,38");
         }
     connections:
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client11.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client12.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client13.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client14.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client15.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client16.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client17.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client18.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client19.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client110.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client111.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client112.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client113.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client114.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client115.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client116.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client117.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client118.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client119.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client120.pppg++;
-        routerCore.pppg++ <--> NormalP {  delay = ldelay; } <--> client21.pppg++;
+        routerCore.pppg++ <--> e1: NormalP <--> client11.pppg++;
+        routerCore.pppg++ <--> e2: NormalP <--> client12.pppg++;
+        routerCore.pppg++ <--> e3: NormalP <--> client13.pppg++;
+        routerCore.pppg++ <--> e4: NormalP <--> client14.pppg++;
+        routerCore.pppg++ <--> e5: NormalP <--> client15.pppg++;
+        routerCore.pppg++ <--> e6: NormalP <--> client16.pppg++;
+        routerCore.pppg++ <--> e7: NormalP <--> client17.pppg++;
+        routerCore.pppg++ <--> e8: NormalP <--> client18.pppg++;
+        routerCore.pppg++ <--> e9: NormalP <--> client19.pppg++;
+        routerCore.pppg++ <--> e10: NormalP <--> client110.pppg++;
+        routerCore.pppg++ <--> e11: NormalP <--> client111.pppg++;
+        routerCore.pppg++ <--> e12: NormalP <--> client112.pppg++;
+        routerCore.pppg++ <--> e13: NormalP <--> client113.pppg++;
+        routerCore.pppg++ <--> e14: NormalP <--> client114.pppg++;
+        routerCore.pppg++ <--> e15: NormalP <--> client115.pppg++;
+        routerCore.pppg++ <--> e16: NormalP <--> client116.pppg++;
+        routerCore.pppg++ <--> e17: NormalP <--> client117.pppg++;
+        routerCore.pppg++ <--> e18: NormalP <--> client118.pppg++;
+        routerCore.pppg++ <--> e19: NormalP <--> client119.pppg++;
+        routerCore.pppg++ <--> e20: NormalP <--> client120.pppg++;
+        routerCore.pppg++ <--> e21: NormalP <--> client21.pppg++;
 }

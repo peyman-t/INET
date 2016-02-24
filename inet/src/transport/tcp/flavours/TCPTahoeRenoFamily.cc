@@ -22,10 +22,10 @@
 
 TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
 {
-    ssthresh = 65535;
+    ssthresh = 655350;
 
     dctcp_alpha = 0;
-    dctcp_gamma = 0.05;
+    dctcp_gamma = 0.1;
     dctcp_lastCalcTime = 0;
     dctcp_marked = 0;
     dctcp_total = 0;
