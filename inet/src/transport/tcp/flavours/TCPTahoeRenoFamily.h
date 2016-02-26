@@ -45,9 +45,18 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     //LGCC
     double lgcc_rate;
     double lgcc_maxWin;
+    int lgcc_winSize;
     double lgcc_load;
+    double lgcc_calcLoad;
     double lgcc_gamma;
     double lgcc_r;
+    double lgcc_rInit;
+    double lgcc_rConv;
+    double lgcc_cntr;
+    bool lgcc_fnem;
+    double ecnmarked[100];
+    double total[100];
+
 };
 
 

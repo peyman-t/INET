@@ -61,6 +61,7 @@ TCPBaseAlgStateVariables::TCPBaseAlgStateVariables()
     // Jacobson's alg: srtt must be initialized to 0, rttvar to a value which
     // will yield rto = 3s initially.
     srtt = 0;
+    minrtt = 100;
     rttvar = 3.0 / 4.0;
 
     numRtos = 0;
@@ -96,7 +97,7 @@ TCPBaseAlg::TCPBaseAlg() : TCPAlgorithm(),
         state((TCPBaseAlgStateVariables *&)TCPAlgorithm::state)
 {
     rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = NULL;
-    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = NULL;
+    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector = NULL;
 }
 
 TCPBaseAlg::~TCPBaseAlg()
@@ -117,6 +118,7 @@ TCPBaseAlg::~TCPBaseAlg()
     delete rttvarVector;
     delete rtoVector;
     delete numRtosVector;
+    delete loadVector;
 }
 
 void TCPBaseAlg::initialize()
@@ -143,6 +145,7 @@ void TCPBaseAlg::initialize()
             rttvarVector = new cOutVector("RTTVAR");
             rtoVector = new cOutVector("RTO");
             numRtosVector = new cOutVector("numRTOs");
+            loadVector = new cOutVector("load");
         }
     } else {
         if (conn->tcpMain2->recordStatistics)
@@ -154,6 +157,7 @@ void TCPBaseAlg::initialize()
             rttvarVector = new cOutVector("RTTVAR");
             rtoVector = new cOutVector("RTO");
             numRtosVector = new cOutVector("numRTOs");
+            loadVector = new cOutVector("load");
         }
     }
 }
@@ -390,6 +394,9 @@ void TCPBaseAlg::rttMeasurementComplete(simtime_t tSent, simtime_t tAcked)
     // update smoothed RTT estimate (srtt) and variance (rttvar)
     const double g = 0.125; // 1 / 8; (1 - alpha) where alpha == 7 / 8;
     simtime_t newRTT = tAcked - tSent;
+
+    if(newRTT < state->minrtt)
+        state->minrtt = newRTT;
 
     simtime_t& srtt = state->srtt;
     simtime_t& rttvar = state->rttvar;

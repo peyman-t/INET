@@ -30,11 +30,24 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     dctcp_marked = 0;
     dctcp_total = 0;
 
-    lgcc_rate = 0;
-    lgcc_maxWin = 60000;
+    lgcc_rate = 0.04;
+    lgcc_maxWin = 60000; // 40Mbps : 240000;
     lgcc_load = 0;
+    lgcc_calcLoad = 0;
     lgcc_gamma = 0.001;
-    lgcc_r = 0.5;
+
+    lgcc_rInit = 0.2;
+    lgcc_rConv = 0.075;
+    lgcc_r = lgcc_rInit;
+
+    lgcc_cntr = 0;
+    lgcc_fnem = false;
+    lgcc_winSize = 30;
+
+    for(int i = 0; i < lgcc_winSize; i++) {
+        ecnmarked[i] = 0;
+        total[i] = 1;
+    }
 }
 
 std::string TCPTahoeRenoFamilyStateVariables::info() const

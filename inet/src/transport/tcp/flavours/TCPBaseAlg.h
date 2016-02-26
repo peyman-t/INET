@@ -60,6 +60,7 @@ class INET_API TCPBaseAlgStateVariables : public TCPStateVariables
     /// round-trip time estimation (Jacobson's algorithm)
     //@{
     simtime_t srtt;          ///< smoothed round-trip time
+    simtime_t minrtt;          ///< min round-trip time
     simtime_t rttvar;        ///< variance of round-trip time
     //@}
 
@@ -117,6 +118,7 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     cOutVector *rttvarVector; // will record RTT variance (rttvar)
     cOutVector *rtoVector;   // will record retransmission timeout
     cOutVector *numRtosVector; // will record total number of RTOs
+    cOutVector *loadVector; // will record total number of RTOs
 
   protected:
     /** @name Process REXMIT, PERSIST, DELAYED-ACK and KEEP-ALIVE timers */
