@@ -19,18 +19,18 @@ import inet.linklayer.queue.REDDropper;
 network DCTCPIncast
 {
     parameters:
-        @display("bgb=637,580");
-//        double ldelay @unit(s) = default(0.1s);
-//        double ldatarate @unit(Mbps) = default(10Mbps);
-        types:
+        @display("bgb=740,580");
+    //        double ldelay @unit(s) = default(0.1s);
+    //        double ldatarate @unit(Mbps) = default(10Mbps);
+    types:
         channel NormalP extends DatarateChannel
         {
             parameters:
-//                datarate = ldatarate;
+                //                datarate = ldatarate;
                 per = 0;
                 ber = 0;
         }
-        
+
 
     submodules:
         routerCore: SplitTCPRouter {

@@ -97,7 +97,7 @@ TCPBaseAlg::TCPBaseAlg() : TCPAlgorithm(),
         state((TCPBaseAlgStateVariables *&)TCPAlgorithm::state)
 {
     rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = NULL;
-    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector = NULL;
+    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector  = calcLoadVector = brVector = NULL;
 }
 
 TCPBaseAlg::~TCPBaseAlg()
@@ -119,6 +119,8 @@ TCPBaseAlg::~TCPBaseAlg()
     delete rtoVector;
     delete numRtosVector;
     delete loadVector;
+    delete calcLoadVector;
+    delete brVector;
 }
 
 void TCPBaseAlg::initialize()
@@ -146,6 +148,8 @@ void TCPBaseAlg::initialize()
             rtoVector = new cOutVector("RTO");
             numRtosVector = new cOutVector("numRTOs");
             loadVector = new cOutVector("load");
+            calcLoadVector = new cOutVector("calcLoad");
+            brVector = new cOutVector("birthRate");
         }
     } else {
         if (conn->tcpMain2->recordStatistics)
@@ -158,6 +162,8 @@ void TCPBaseAlg::initialize()
             rtoVector = new cOutVector("RTO");
             numRtosVector = new cOutVector("numRTOs");
             loadVector = new cOutVector("load");
+            calcLoadVector = new cOutVector("calcLoad");
+            brVector = new cOutVector("birthRate");
         }
     }
 }

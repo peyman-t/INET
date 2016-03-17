@@ -110,7 +110,7 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
 
         simtime_t now1 = simTime();
 
-        if(now1 - state->dctcp_lastCalcTime >= state->minrtt) {
+        if((now1 - state->dctcp_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
             for(int i = 0; i < state->lgcc_winSize - 1; i++) {
                 state->ecnmarked[i] = state->ecnmarked[i + 1];
                 state->total[i] = state->total[i + 1];
@@ -124,35 +124,57 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
                 sumTotal +=  state->total[i];
             }
             state->lgcc_calcLoad = sumECN / sumTotal;
-            if (loadVector)
-                loadVector->record(state->lgcc_calcLoad);
+//            state->lgcc_calcLoad = state->lgcc_gamma * (state->dctcp_marked / state->dctcp_total) + (1 - state->lgcc_gamma) * state->lgcc_calcLoad;
+            if (calcLoadVector)
+                calcLoadVector->record(state->lgcc_calcLoad);
 
-            state->lgcc_load = (state->ecnmarked[state->lgcc_winSize - 1] + state->ecnmarked[state->lgcc_winSize - 2]) / (state->total[state->lgcc_winSize - 1] + state->total[state->lgcc_winSize - 2]);
+            state->lgcc_load = (state->ecnmarked[state->lgcc_winSize - 1] + state->ecnmarked[state->lgcc_winSize - 2]) /
+                    (state->total[state->lgcc_winSize - 1] + state->total[state->lgcc_winSize - 2]);
+            if (loadVector)
+                loadVector->record(state->lgcc_load);
 
             double alphaTemp = state->lgcc_r;
             bool setBack = false;
 
             double expRate = (1 - state->lgcc_calcLoad);
-            if(state->lgcc_rate < expRate - 0.025 && expRate < 1) {
-                state->lgcc_r = ((expRate) - state->lgcc_rate) * 2;
-//                if(cntr <= state->lgcc_winSize) {
-//                    cntr++;
-//                    if(state->lgcc_r > alphaTemp)
-//                        state->lgcc_r = alphaTemp;
-//                }
-            } else if(state->lgcc_rate > expRate + 0.025) {
-                if((1 - state->lgcc_rate - state->lgcc_load) < 0) {
-                    state->lgcc_r = (state->lgcc_rate - (expRate)) * 2;
+            if(state->lgcc_rate < expRate - 0.015 && expRate < 1) {
+                state->lgcc_r = ((expRate) - state->lgcc_rate) * 2.5;
+            } else if(state->lgcc_rate > expRate + 0.015) {
+                if((1 - state->lgcc_rate - state->lgcc_load) < 0)
+                {
+                    state->lgcc_r = (state->lgcc_rate - (expRate)) * 2.5;
                     setBack = true;
                 }
-            }
+            } else if(expRate < 1)
+                state->lgcc_r = state->lgcc_rConv;
 
             state->lgcc_r = std::max(std::min(state->lgcc_r, state->lgcc_rInit), state->lgcc_rConv);
 
-            if(state->lgcc_cntr <= 3) {
-                state->lgcc_load = 0;
+            if(state->lgcc_cntr <= 5) { // state->lgcc_winSize
+                if(state->dctcp_marked || state->lgcc_fnem) {
+                    state->lgcc_load = state->lgcc_calcLoad;
+                    state->lgcc_fnem = true;
+                } else {
+                    state->lgcc_load = 0;
+                }
+                state->lgcc_r = state->lgcc_rInit;
                 state->lgcc_cntr++;
             }
+//            if(state->lgcc_cntr <= 3) { //state->lgcc_maxWin / 80000
+//                state->lgcc_load = 0;
+//                state->lgcc_r = state->lgcc_rInit;
+//                state->lgcc_cntr++;
+//                if(state->dctcp_marked == state->dctcp_total)
+//                    state->lgcc_fnem = true;
+//            } else if(state->lgcc_cntr <= 6) {
+//                if(state->dctcp_marked == state->dctcp_total && state->lgcc_fnem) {
+//                    state->lgcc_load = state->lgcc_rate;
+//                    state->lgcc_r = state->lgcc_rConv;
+//                }
+//                state->lgcc_cntr++;
+//            }
+
+//            state->lgcc_r = state->lgcc_rInit;
             state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load) + state->lgcc_rate;
 
             uint32 newCwnd = state->lgcc_rate * state->lgcc_maxWin;
@@ -167,6 +189,8 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
 
             if (cwndVector)
                 cwndVector->record(state->snd_cwnd);
+            if (brVector)
+                brVector->record(state->lgcc_r);
 
             state->dctcp_lastCalcTime = now1;
 

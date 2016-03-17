@@ -119,6 +119,8 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     cOutVector *rtoVector;   // will record retransmission timeout
     cOutVector *numRtosVector; // will record total number of RTOs
     cOutVector *loadVector; // will record total number of RTOs
+    cOutVector *brVector; // will record total number of RTOs
+    cOutVector *calcLoadVector; // will record total number of RTOs
 
   protected:
     /** @name Process REXMIT, PERSIST, DELAYED-ACK and KEEP-ALIVE timers */
