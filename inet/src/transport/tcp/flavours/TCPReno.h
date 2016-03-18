@@ -19,6 +19,7 @@
 #define __INET_TCPRENO_H
 
 #include "INETDefs.h"
+#include "distrib.h"
 
 #include "TCPTahoeRenoFamily.h"
 
@@ -47,6 +48,7 @@ class INET_API TCPReno : public TCPTahoeRenoFamily
 
     /** Redefine what should happen on retransmission */
     virtual void processRexmitTimer(TCPEventCode& event);
+    virtual void processPaceTimer(TCPEventCode& event);
 
   public:
     /** Ctor */

@@ -86,6 +86,20 @@ void TCPReno::processRexmitTimer(TCPEventCode& event)
     conn->retransmitOneSegment(true);
 }
 
+void TCPReno::processPaceTimer(TCPEventCode& event)
+{
+    TCPTahoeRenoFamily::processPaceTimer(event);
+
+    uint32 cwnd = state->snd_cwnd;
+    if(state->snd_cwnd >= (state->snd_nxt - state->snd_una) + 2 * state->snd_mss)
+        state->snd_cwnd = state->snd_mss + (state->snd_nxt - state->snd_una);
+
+    sendData(false);
+
+    state->snd_cwnd = cwnd;
+    conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
+}
+
 void TCPReno::receivedDataAck(uint32 firstSeqAcked)
 {
     TCPTahoeRenoFamily::receivedDataAck(firstSeqAcked);
@@ -137,12 +151,12 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
             bool setBack = false;
 
             double expRate = (1 - state->lgcc_calcLoad);
-            if(state->lgcc_rate < expRate - 0.015 && expRate < 1) {
-                state->lgcc_r = ((expRate) - state->lgcc_rate) * 2.5;
+            if(state->lgcc_rate < expRate - 0.015 && expRate < 1) { //0.015
+                state->lgcc_r = ((expRate) - state->lgcc_rate) * 6.66;//2.5
             } else if(state->lgcc_rate > expRate + 0.015) {
                 if((1 - state->lgcc_rate - state->lgcc_load) < 0)
                 {
-                    state->lgcc_r = (state->lgcc_rate - (expRate)) * 2.5;
+                    state->lgcc_r = (state->lgcc_rate - (expRate)) * 6.66;//2.5
                     setBack = true;
                 }
             } else if(expRate < 1)
@@ -199,7 +213,18 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
 
             state->dctcp_marked = 0;
             state->dctcp_total = 0;
+
+            double minRTT = (double)state->minrtt.dbl();
+            double totalSpace = minRTT - (8 * (double)state->snd_cwnd / 40000000);
+            state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
+            if(!state->lgcc_sch) {
+                conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
+                state->lgcc_sch = true;
+            }
+            if (interPSpaceVector)
+                interPSpaceVector->record(state->interPacketSpace);
         }
+        return;
 
 //goto l1;
 // Works!!!!!!!!!!!!!!!!!!!!!!!!!!!!

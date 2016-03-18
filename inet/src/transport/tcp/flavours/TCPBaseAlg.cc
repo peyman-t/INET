@@ -96,8 +96,8 @@ std::string TCPBaseAlgStateVariables::detailedInfo() const
 TCPBaseAlg::TCPBaseAlg() : TCPAlgorithm(),
         state((TCPBaseAlgStateVariables *&)TCPAlgorithm::state)
 {
-    rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = NULL;
-    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector  = calcLoadVector = brVector = NULL;
+    rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = paceTimer = NULL;
+    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector  = calcLoadVector = brVector = interPSpaceVector = NULL;
 }
 
 TCPBaseAlg::~TCPBaseAlg()
@@ -109,6 +109,7 @@ TCPBaseAlg::~TCPBaseAlg()
     if (persistTimer)    delete cancelEvent(persistTimer);
     if (delayedAckTimer) delete cancelEvent(delayedAckTimer);
     if (keepAliveTimer)  delete cancelEvent(keepAliveTimer);
+    if (paceTimer)       delete cancelEvent(paceTimer);
 
     // delete statistics objects
     delete cwndVector;
@@ -121,6 +122,7 @@ TCPBaseAlg::~TCPBaseAlg()
     delete loadVector;
     delete calcLoadVector;
     delete brVector;
+    delete interPSpaceVector;
 }
 
 void TCPBaseAlg::initialize()
@@ -131,11 +133,13 @@ void TCPBaseAlg::initialize()
     persistTimer = new cMessage("PERSIST");
     delayedAckTimer = new cMessage("DELAYEDACK");
     keepAliveTimer = new cMessage("KEEPALIVE");
+    paceTimer = new cMessage("PACE");
 
     rexmitTimer->setContextPointer(conn);
     persistTimer->setContextPointer(conn);
     delayedAckTimer->setContextPointer(conn);
     keepAliveTimer->setContextPointer(conn);
+    paceTimer->setContextPointer(conn);
 
     if(conn->tcpMain != NULL) {
         if (conn->tcpMain->recordStatistics)
@@ -150,6 +154,7 @@ void TCPBaseAlg::initialize()
             loadVector = new cOutVector("load");
             calcLoadVector = new cOutVector("calcLoad");
             brVector = new cOutVector("birthRate");
+            interPSpaceVector = new cOutVector("interPSpace");
         }
     } else {
         if (conn->tcpMain2->recordStatistics)
@@ -164,6 +169,7 @@ void TCPBaseAlg::initialize()
             loadVector = new cOutVector("load");
             calcLoadVector = new cOutVector("calcLoad");
             brVector = new cOutVector("birthRate");
+            interPSpaceVector = new cOutVector("interPSpace");
         }
     }
 }
@@ -231,6 +237,7 @@ void TCPBaseAlg::connectionClosed()
     cancelEvent(persistTimer);
     cancelEvent(delayedAckTimer);
     cancelEvent(keepAliveTimer);
+    cancelEvent(paceTimer);
 }
 
 void TCPBaseAlg::processTimer(cMessage *timer, TCPEventCode& event)
@@ -243,6 +250,8 @@ void TCPBaseAlg::processTimer(cMessage *timer, TCPEventCode& event)
         processDelayedAckTimer(event);
     else if (timer == keepAliveTimer)
         processKeepAliveTimer(event);
+    else if (timer == paceTimer)
+            processPaceTimer(event);
     else
         throw cRuntimeError(timer, "unrecognized timer");
 }
@@ -360,6 +369,10 @@ void TCPBaseAlg::processDelayedAckTimer(TCPEventCode& event)
 {
     state->ack_now = true;
     conn->sendAck();
+}
+
+void TCPBaseAlg::processPaceTimer(TCPEventCode& event)
+{
 }
 
 void TCPBaseAlg::processKeepAliveTimer(TCPEventCode& event)

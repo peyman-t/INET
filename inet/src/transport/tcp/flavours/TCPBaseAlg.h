@@ -110,6 +110,7 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     cMessage *persistTimer;
     cMessage *delayedAckTimer;
     cMessage *keepAliveTimer;
+    cMessage *paceTimer;
 
     cOutVector *cwndVector;  // will record changes to snd_cwnd
     cOutVector *ssthreshVector; // will record changes to ssthresh
@@ -121,6 +122,7 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     cOutVector *loadVector; // will record total number of RTOs
     cOutVector *brVector; // will record total number of RTOs
     cOutVector *calcLoadVector; // will record total number of RTOs
+    cOutVector *interPSpaceVector; // will record total number of RTOs
 
   protected:
     /** @name Process REXMIT, PERSIST, DELAYED-ACK and KEEP-ALIVE timers */
@@ -129,6 +131,7 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     virtual void processPersistTimer(TCPEventCode& event);
     virtual void processDelayedAckTimer(TCPEventCode& event);
     virtual void processKeepAliveTimer(TCPEventCode& event);
+    virtual void processPaceTimer(TCPEventCode& event);
     //@}
 
     /**

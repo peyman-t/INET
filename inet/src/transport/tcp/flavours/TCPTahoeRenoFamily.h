@@ -38,6 +38,7 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     //DCTCP
     double dctcp_marked;
     double dctcp_total;
+    double dctcp_totalSent;
     double dctcp_alpha;
     simtime_t dctcp_lastCalcTime;
     double dctcp_gamma;
@@ -56,6 +57,8 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     bool lgcc_fnem;
     double ecnmarked[100];
     double total[100];
+    double interPacketSpace;
+    bool lgcc_sch;
 
 };
 

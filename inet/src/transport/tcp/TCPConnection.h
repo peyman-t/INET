@@ -533,6 +533,9 @@ class INET_API TCPConnection
     void scheduleTimeout(cMessage *msg, simtime_t timeout)
         {if(tcpMain != NULL)tcpMain->scheduleAt(simTime()+timeout, msg); else tcpMain2->scheduleAt(simTime()+timeout, msg);}
 
+    void schedulePace(cMessage *msg, simtime_t pace)
+        {if(tcpMain != NULL)tcpMain->scheduleAt(simTime()+pace, msg); else tcpMain2->scheduleAt(simTime()+pace, msg);}
+
   protected:
     /** Utility: cancel a timer */
     cMessage *cancelEvent(cMessage *msg) {if(tcpMain != NULL)return tcpMain->cancelEvent(msg); return tcpMain2->cancelEvent(msg);}

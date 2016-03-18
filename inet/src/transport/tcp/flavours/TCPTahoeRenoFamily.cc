@@ -29,6 +29,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     dctcp_lastCalcTime = 0;
     dctcp_marked = 0;
     dctcp_total = 0;
+    dctcp_totalSent = 0;
 
     lgcc_maxWin = 240000; // 40Mbps : 240000;        10Mbps : 60000;
     lgcc_rate = 2 / (lgcc_maxWin / 1500);
@@ -43,6 +44,9 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_cntr = 0;
     lgcc_fnem = false;
     lgcc_winSize = 40;
+
+    lgcc_sch = false;
+    interPacketSpace = 0;
 
     for(int i = 0; i < lgcc_winSize; i++) {
         ecnmarked[i] = 0;
