@@ -17,19 +17,19 @@
 //
 
 #include <algorithm>   // min,max
-#include "TCPReno.h"
+#include "DCTCP.h"
 #include "TCP.h"
 
 
-Register_Class(TCPReno);
+Register_Class(DCTCP);
 
 
-TCPReno::TCPReno() : TCPTahoeRenoFamily(),
+DCTCP::DCTCP() : TCPTahoeRenoFamily(),
         state((TCPRenoStateVariables *&)TCPAlgorithm::state)
 {
 }
 
-void TCPReno::recalculateSlowStartThreshold()
+void DCTCP::recalculateSlowStartThreshold()
 {
     // RFC 2581, page 4:
     // "When a TCP sender detects segment loss using the retransmission
@@ -51,7 +51,7 @@ void TCPReno::recalculateSlowStartThreshold()
         ssthreshVector->record(state->ssthresh);
 }
 
-void TCPReno::processRexmitTimer(TCPEventCode& event)
+void DCTCP::processRexmitTimer(TCPEventCode& event)
 {
     TCPTahoeRenoFamily::processRexmitTimer(event);
 
@@ -86,7 +86,7 @@ void TCPReno::processRexmitTimer(TCPEventCode& event)
     conn->retransmitOneSegment(true);
 }
 
-void TCPReno::processPaceTimer(TCPEventCode& event)
+void DCTCP::processPaceTimer(TCPEventCode& event)
 {
     TCPTahoeRenoFamily::processPaceTimer(event);
 
@@ -100,7 +100,7 @@ void TCPReno::processPaceTimer(TCPEventCode& event)
     conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
 }
 
-void TCPReno::receivedDataAck(uint32 firstSeqAcked)
+void DCTCP::receivedDataAck(uint32 firstSeqAcked)
 {
     TCPTahoeRenoFamily::receivedDataAck(firstSeqAcked);
 
@@ -400,7 +400,7 @@ l2:
     sendData(false);
 }
 
-void TCPReno::receivedDuplicateAck()
+void DCTCP::receivedDuplicateAck()
 {
     TCPTahoeRenoFamily::receivedDuplicateAck();
 
