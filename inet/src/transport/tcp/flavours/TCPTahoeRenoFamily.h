@@ -60,6 +60,7 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     double total[100];
     double interPacketSpace;
     bool lgcc_sch;
+    bool lgcc_sch_rate;
 
 };
 

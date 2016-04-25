@@ -111,6 +111,7 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     cMessage *delayedAckTimer;
     cMessage *keepAliveTimer;
     cMessage *paceTimer;
+    cMessage *rateUpdateTimer;
 
     cOutVector *cwndVector;  // will record changes to snd_cwnd
     cOutVector *ssthreshVector; // will record changes to ssthresh
@@ -132,6 +133,7 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     virtual void processDelayedAckTimer(TCPEventCode& event);
     virtual void processKeepAliveTimer(TCPEventCode& event);
     virtual void processPaceTimer(TCPEventCode& event);
+    virtual void processRateUpdateTimer(TCPEventCode& event);
     //@}
 
     /**

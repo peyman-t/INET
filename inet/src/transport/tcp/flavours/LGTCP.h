@@ -49,6 +49,7 @@ class INET_API LGTCP : public TCPTahoeRenoFamily
     /** Redefine what should happen on retransmission */
     virtual void processRexmitTimer(TCPEventCode& event);
     virtual void processPaceTimer(TCPEventCode& event);
+    virtual void processRateUpdateTimer(TCPEventCode& event);
 
   public:
     /** Ctor */

@@ -96,7 +96,7 @@ std::string TCPBaseAlgStateVariables::detailedInfo() const
 TCPBaseAlg::TCPBaseAlg() : TCPAlgorithm(),
         state((TCPBaseAlgStateVariables *&)TCPAlgorithm::state)
 {
-    rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = paceTimer = NULL;
+    rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = paceTimer = rateUpdateTimer = NULL;
     cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector  = calcLoadVector = brVector = interPSpaceVector = NULL;
 }
 
@@ -110,6 +110,7 @@ TCPBaseAlg::~TCPBaseAlg()
     if (delayedAckTimer) delete cancelEvent(delayedAckTimer);
     if (keepAliveTimer)  delete cancelEvent(keepAliveTimer);
     if (paceTimer)       delete cancelEvent(paceTimer);
+    if (rateUpdateTimer) delete cancelEvent(rateUpdateTimer);
 
     // delete statistics objects
     delete cwndVector;
@@ -134,12 +135,14 @@ void TCPBaseAlg::initialize()
     delayedAckTimer = new cMessage("DELAYEDACK");
     keepAliveTimer = new cMessage("KEEPALIVE");
     paceTimer = new cMessage("PACE");
+    rateUpdateTimer = new cMessage("RATEUPDATE");
 
     rexmitTimer->setContextPointer(conn);
     persistTimer->setContextPointer(conn);
     delayedAckTimer->setContextPointer(conn);
     keepAliveTimer->setContextPointer(conn);
     paceTimer->setContextPointer(conn);
+    rateUpdateTimer->setContextPointer(conn);
 
     if(conn->tcpMain != NULL) {
         if (conn->tcpMain->recordStatistics)
@@ -238,6 +241,7 @@ void TCPBaseAlg::connectionClosed()
     cancelEvent(delayedAckTimer);
     cancelEvent(keepAliveTimer);
     cancelEvent(paceTimer);
+    cancelEvent(rateUpdateTimer);
 }
 
 void TCPBaseAlg::processTimer(cMessage *timer, TCPEventCode& event)
@@ -252,6 +256,8 @@ void TCPBaseAlg::processTimer(cMessage *timer, TCPEventCode& event)
         processKeepAliveTimer(event);
     else if (timer == paceTimer)
             processPaceTimer(event);
+    else if (timer == rateUpdateTimer)
+            processRateUpdateTimer(event);
     else
         throw cRuntimeError(timer, "unrecognized timer");
 }
@@ -372,6 +378,10 @@ void TCPBaseAlg::processDelayedAckTimer(TCPEventCode& event)
 }
 
 void TCPBaseAlg::processPaceTimer(TCPEventCode& event)
+{
+}
+
+void TCPBaseAlg::processRateUpdateTimer(TCPEventCode& event)
 {
 }
 

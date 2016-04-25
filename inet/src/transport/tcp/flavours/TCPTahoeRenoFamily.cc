@@ -47,6 +47,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_winSize = 40;
 
     lgcc_sch = false;
+    lgcc_sch_rate = false;
     interPacketSpace = 0;
 
     for(int i = 0; i < lgcc_winSize; i++) {
