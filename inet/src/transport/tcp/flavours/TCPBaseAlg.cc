@@ -19,6 +19,7 @@
 #include "TCPBaseAlg.h"
 #include "TCP.h"
 #include "TCPSACKRexmitQueue.h"
+#include "TCPTahoeRenoFamily.h"
 
 
 //
@@ -528,6 +529,35 @@ void TCPBaseAlg::sendCommandInvoked()
 {
     // try sending
     sendData(true);
+
+//    std::string algorithmName1 = "LGTCP";
+//
+//    if(conn->tcpMain != NULL) {
+//        std::string algorithmName2 = conn->tcpMain->par("tcpAlgorithmClass");
+//        if (algorithmName1 == algorithmName2) // TODO add additional checks for new SACK supporting algorithms here once they are implemented
+//        {
+//            TCPTahoeRenoFamilyStateVariables *state2 = (TCPTahoeRenoFamilyStateVariables *)(conn->getState());
+//
+//            if(!state2->lgcc_sch_rate) {
+//                state2->lgcc_sch_rate = true;
+//                TCPEventCode event = TCP_E_IGNORE;
+//                processRateUpdateTimer(event);
+//            }
+//        }
+//    } else {
+//        std::string algorithmName2 = conn->tcpMain2->par("tcpAlgorithmClass");
+//        if (algorithmName1 == algorithmName2) // TODO add additional checks for new SACK supporting algorithms here once they are implemented
+//        {
+//            TCPTahoeRenoFamilyStateVariables *state2 = (TCPTahoeRenoFamilyStateVariables *)(conn->getState());
+//
+//            if(!state2->lgcc_sch_rate) {
+//                state2->lgcc_sch_rate = true;
+//                TCPEventCode event = TCP_E_IGNORE;
+//                processRateUpdateTimer(event);
+//            }
+//        }
+//    }
+
 }
 
 void TCPBaseAlg::receivedOutOfOrderSegment()

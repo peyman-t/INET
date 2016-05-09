@@ -88,15 +88,18 @@ void LGTCP::processRexmitTimer(TCPEventCode& event)
 
 void LGTCP::processRateUpdateTimer(TCPEventCode& event)
 {
-    TCPTahoeRenoFamily::processRateUpdateTimer(event);
+    if(state->lgcc_pacing) {
+        TCPTahoeRenoFamily::processRateUpdateTimer(event);
 
-    conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
-
-    simtime_t now1 = simTime();
+        conn->scheduleRateUpdate(rateUpdateTimer, 0.0002);
+    }
 
     if(state->lgcc_cntr == 0) {
+//        state->minrtt = 0.000140;
         state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
     }
+
+    simtime_t now1 = simTime();
 
     for(int i = 0; i < state->lgcc_winSize - 1; i++) {
         state->ecnmarked[i] = state->ecnmarked[i + 1];
@@ -196,16 +199,17 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
     state->dctcp_marked = 0;
     state->dctcp_total = 0;
 
-    double minRTT = (double)state->minrtt.dbl();
-    double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_phyRate);
-    state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
-    if(!state->lgcc_sch) {
-        conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
-        state->lgcc_sch = true;
+    if(state->lgcc_pacing) {
+        double minRTT = (double)state->minrtt.dbl();
+        double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_phyRate);
+        state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
+        if(!state->lgcc_sch) {
+            conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
+            state->lgcc_sch = true;
+        }
+        if (interPSpaceVector)
+            interPSpaceVector->record(state->interPacketSpace);
     }
-    if (interPSpaceVector)
-        interPSpaceVector->record(state->interPacketSpace);
-
 }
 
 void LGTCP::processPaceTimer(TCPEventCode& event)
@@ -244,16 +248,21 @@ void LGTCP::receivedDataAck(uint32 firstSeqAcked)
         if(state->ece)
             state->dctcp_marked++;
 
-        if(!state->lgcc_sch_rate) {
+        if(!state->lgcc_sch_rate && state->lgcc_pacing) {
             state->lgcc_sch_rate = true;
             TCPEventCode event = TCP_E_IGNORE;
             processRateUpdateTimer(event);
             //conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
+            return;
         }
 
-        simtime_t now1 = simTime();
+        if(!state->lgcc_pacing) {
+            simtime_t now1 = simTime();
 
-        if((now1 - state->dctcp_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
+            if((now1 - state->dctcp_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
+                TCPEventCode event = TCP_E_IGNORE;
+                processRateUpdateTimer(event);
+            }
         }
         return;
 
