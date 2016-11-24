@@ -278,6 +278,436 @@ network DCTCPDumbbell
         routerCore.pppg++ <--> e21: NormalP <--> routerCore2.pppg++;
 }
 
+network DCTCPBitDown3
+{
+    parameters:
+        @display("bgb=940,276");
+    //        double ldelay @unit(s) = default(0.1s);
+    //        double ldatarate @unit(Mbps) = default(10Mbps);
+    types:
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                //                datarate = ldatarate;
+                per = 0;
+                ber = 0;
+        }
+
+
+    submodules:
+        routerCore: SplitTCPRouter {
+            parameters:
+                @display("p=179,128;i=abstract/router");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=78,100");
+        }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=78,163");
+        }
+        client23: StandardHost2 {
+            parameters:
+                @display("p=599,188");
+        }
+        configurator: IPv4NetworkConfigurator;
+        routerCore1: SplitTCPRouter {
+            parameters:
+                @display("p=345,128;i=abstract/router");
+        }
+        client22: StandardHost2 {
+            parameters:
+                @display("p=306,195");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=384,195");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=599,77");
+        }
+        routerCore3: SplitTCPRouter {
+            parameters:
+                @display("p=529,128;i=abstract/router");
+        }
+    connections:
+        routerCore.pppg++ <--> e1: NormalP <--> client11.pppg++;
+        routerCore.pppg++ <--> e2: NormalP <--> client12.pppg++;
+        routerCore.pppg++ <--> e4: NormalP <--> routerCore1.pppg++;
+        client22.pppg++ <--> e9: NormalP <--> routerCore1.pppg++;
+        client13.pppg++ <--> e10: NormalP <--> routerCore1.pppg++;
+        routerCore1.pppg++ <--> e11: NormalP <--> routerCore3.pppg++;
+        routerCore3.pppg++ <--> e12: NormalP <--> client21.pppg++;
+        client23.pppg++ <--> e13: NormalP <--> routerCore3.pppg++;
+}
+
+network DCTCPBitDown
+{
+    parameters:
+        @display("bgb=940,276");
+    //        double ldelay @unit(s) = default(0.1s);
+    //        double ldatarate @unit(Mbps) = default(10Mbps);
+    types:
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                //                datarate = ldatarate;
+                per = 0;
+                ber = 0;
+        }
+
+
+    submodules:
+        routerCore: SplitTCPRouter {
+            parameters:
+                @display("p=179,128;i=abstract/router");
+        }
+        routerCore2: SplitTCPRouter {
+            parameters:
+                @display("p=531,128;i=abstract/router");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=78,100");
+        }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=78,163");
+        }
+        client23: StandardHost2 {
+            parameters:
+                @display("p=482,202");
+        }
+        configurator: IPv4NetworkConfigurator;
+        routerCore1: SplitTCPRouter {
+            parameters:
+                @display("p=345,128;i=abstract/router");
+        }
+        client22: StandardHost2 {
+            parameters:
+                @display("p=306,195");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=384,195");
+        }
+        routerCore3: SplitTCPRouter {
+            parameters:
+                @display("p=732,128;i=abstract/router");
+        }
+        client24: StandardHost2 {
+            parameters:
+                @display("p=825,195");
+        }
+        client14: StandardHost2 {
+            parameters:
+                @display("p=599,195");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=825,100");
+        }
+        client111: StandardHost2 {
+            parameters:
+                @display("p=78,38");
+        }
+        client211: StandardHost2 {
+            parameters:
+                @display("p=825,30");
+        }
+        client112: StandardHost2 {
+            parameters:
+                @display("p=345,234");
+        }
+        client212: StandardHost2 {
+            parameters:
+                @display("p=540,234");
+        }
+    connections:
+        routerCore.pppg++ <--> e1: NormalP <--> client11.pppg++;
+        routerCore.pppg++ <--> e2: NormalP <--> client12.pppg++;
+        routerCore2.pppg++ <--> e3: NormalP <--> client23.pppg++;
+        routerCore.pppg++ <--> e4: NormalP <--> routerCore1.pppg++;
+        routerCore1.pppg++ <--> e5: NormalP <--> routerCore2.pppg++;
+        routerCore2.pppg++ <--> e6: NormalP <--> routerCore3.pppg++;
+        routerCore3.pppg++ <--> e7: NormalP <--> client24.pppg++;
+        routerCore3.pppg++ <--> e8: NormalP <--> client21.pppg++;
+        client22.pppg++ <--> e9: NormalP <--> routerCore1.pppg++;
+        client13.pppg++ <--> e10: NormalP <--> routerCore1.pppg++;
+        client14.pppg++ <--> e11: NormalP <--> routerCore2.pppg++;
+        client111.pppg++ <--> e12: NormalP <--> routerCore.pppg++;
+        routerCore3.pppg++ <--> e13: NormalP <--> client211.pppg++;
+        client112.pppg++ <--> e14: NormalP <--> routerCore1.pppg++;
+        client212.pppg++ <--> e15: NormalP <--> routerCore2.pppg++;
+}
+
+network DCTCPBitDown5
+{
+    parameters:
+        @display("bgb=1192,276");
+    //        double ldelay @unit(s) = default(0.1s);
+    //        double ldatarate @unit(Mbps) = default(10Mbps);
+    types:
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                //                datarate = ldatarate;
+                per = 0;
+                ber = 0;
+        }
+
+
+    submodules:
+        routerCore: SplitTCPRouter {
+            parameters:
+                @display("p=179,128;i=abstract/router");
+        }
+        routerCore2: SplitTCPRouter {
+            parameters:
+                @display("p=531,128;i=abstract/router");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=78,100");
+        }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=78,163");
+        }
+        client23: StandardHost2 {
+            parameters:
+                @display("p=492,195");
+        }
+        configurator: IPv4NetworkConfigurator;
+        routerCore1: SplitTCPRouter {
+            parameters:
+                @display("p=345,128;i=abstract/router");
+        }
+        client22: StandardHost2 {
+            parameters:
+                @display("p=306,195");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=384,195");
+        }
+        routerCore3: SplitTCPRouter {
+            parameters:
+                @display("p=732,128;i=abstract/router");
+        }
+        client24: StandardHost2 {
+            parameters:
+                @display("p=693,195");
+        }
+        client14: StandardHost2 {
+            parameters:
+                @display("p=582,195");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=1039,100");
+        }
+        routerCore4: SplitTCPRouter {
+            parameters:
+                @display("p=928,128;i=abstract/router");
+        }
+        client15: StandardHost2 {
+            parameters:
+                @display("p=771,195");
+        }
+        client25: StandardHost2 {
+            parameters:
+                @display("p=1039,195");
+        }
+    connections:
+        routerCore.pppg++ <--> e1: NormalP <--> client11.pppg++;
+        routerCore.pppg++ <--> e2: NormalP <--> client12.pppg++;
+        routerCore2.pppg++ <--> e3: NormalP <--> client23.pppg++;
+        routerCore.pppg++ <--> e4: NormalP <--> routerCore1.pppg++;
+        routerCore1.pppg++ <--> e5: NormalP <--> routerCore2.pppg++;
+        routerCore2.pppg++ <--> e6: NormalP <--> routerCore3.pppg++;
+        client22.pppg++ <--> e7: NormalP <--> routerCore1.pppg++;
+        client13.pppg++ <--> e8: NormalP <--> routerCore1.pppg++;
+        client14.pppg++ <--> e9: NormalP <--> routerCore2.pppg++;
+        routerCore3.pppg++ <--> e10: NormalP <--> client24.pppg++;
+        routerCore4.pppg++ <--> e11: NormalP <--> client21.pppg++;
+        routerCore3.pppg++ <--> e12: NormalP <--> routerCore4.pppg++;
+        client15.pppg++ <--> e13: NormalP <--> routerCore3.pppg++;
+        routerCore4.pppg++ <--> e14: NormalP <--> client25.pppg++;
+}
+
+network DCTCPBitDown10
+{
+    parameters:
+        @display("bgb=1192,276");
+    //        double ldelay @unit(s) = default(0.1s);
+    //        double ldatarate @unit(Mbps) = default(10Mbps);
+    types:
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                //                datarate = ldatarate;
+                per = 0;
+                ber = 0;
+        }
+
+
+    submodules:
+        routerCore: SplitTCPRouter {
+            parameters:
+                @display("p=144,128;i=abstract/router");
+        }
+        routerCore2: SplitTCPRouter {
+            parameters:
+                @display("p=294,128;i=abstract/router");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=63,93");
+        }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=150,242");
+        }
+        client23: StandardHost2 {
+            parameters:
+                @display("p=268,189");
+        }
+        configurator: IPv4NetworkConfigurator;
+        routerCore1: SplitTCPRouter {
+            parameters:
+                @display("p=218,128;i=abstract/router");
+        }
+        client22: StandardHost2 {
+            parameters:
+                @display("p=199,189");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=238,242");
+        }
+        routerCore3: SplitTCPRouter {
+            parameters:
+                @display("p=369,128;i=abstract/router");
+        }
+        client24: StandardHost2 {
+            parameters:
+                @display("p=346,189");
+        }
+        client14: StandardHost2 {
+            parameters:
+                @display("p=307,242");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=927,100");
+        }
+        routerCore4: SplitTCPRouter {
+            parameters:
+                @display("p=442,128;i=abstract/router");
+        }
+        client15: StandardHost2 {
+            parameters:
+                @display("p=385,242");
+        }
+        client25: StandardHost2 {
+            parameters:
+                @display("p=424,195");
+        }
+        routerCore5: SplitTCPRouter {
+            parameters:
+                @display("p=515,128;i=abstract/router");
+        }
+        routerCore6: SplitTCPRouter {
+            parameters:
+                @display("p=593,128;i=abstract/router");
+        }
+        routerCore7: SplitTCPRouter {
+            parameters:
+                @display("p=674,128;i=abstract/router");
+        }
+        routerCore8: SplitTCPRouter {
+            parameters:
+                @display("p=751,128;i=abstract/router");
+        }
+        routerCore9: SplitTCPRouter {
+            parameters:
+                @display("p=837,128;i=abstract/router");
+        }
+        client16: StandardHost2 {
+            parameters:
+                @display("p=463,242");
+        }
+        client17: StandardHost2 {
+            parameters:
+                @display("p=537,242");
+        }
+        client18: StandardHost2 {
+            parameters:
+                @display("p=617,242");
+        }
+        client19: StandardHost2 {
+            parameters:
+                @display("p=701,242");
+        }
+        client110: StandardHost2 {
+            parameters:
+                @display("p=779,242");
+        }
+        client210: StandardHost2 {
+            parameters:
+                @display("p=825,195");
+        }
+        client26: StandardHost2 {
+            parameters:
+                @display("p=488,195");
+        }
+        client27: StandardHost2 {
+            parameters:
+                @display("p=568,195");
+        }
+        client28: StandardHost2 {
+            parameters:
+                @display("p=656,195");
+        }
+        client29: StandardHost2 {
+            parameters:
+                @display("p=733,195");
+        }
+    connections:
+        routerCore.pppg++ <--> e1: NormalP <--> client11.pppg++;
+        routerCore.pppg++ <--> e2: NormalP <--> client12.pppg++;
+        routerCore2.pppg++ <--> e3: NormalP <--> client23.pppg++;
+        routerCore.pppg++ <--> e4: NormalP <--> routerCore1.pppg++;
+        routerCore1.pppg++ <--> e5: NormalP <--> routerCore2.pppg++;
+        routerCore2.pppg++ <--> e6: NormalP <--> routerCore3.pppg++;
+        client22.pppg++ <--> e7: NormalP <--> routerCore1.pppg++;
+        client13.pppg++ <--> e8: NormalP <--> routerCore1.pppg++;
+        client14.pppg++ <--> e9: NormalP <--> routerCore2.pppg++;
+        routerCore3.pppg++ <--> e10: NormalP <--> client24.pppg++;
+        routerCore3.pppg++ <--> e12: NormalP <--> routerCore4.pppg++;
+        client15.pppg++ <--> e13: NormalP <--> routerCore3.pppg++;
+        routerCore4.pppg++ <--> e14: NormalP <--> client25.pppg++;
+        routerCore9.pppg++ <--> e15: NormalP <--> client21.pppg++;
+        routerCore4.pppg++ <--> e16: NormalP <--> routerCore5.pppg++;
+        routerCore5.pppg++ <--> e17: NormalP <--> routerCore6.pppg++;
+        routerCore6.pppg++ <--> e18: NormalP <--> routerCore7.pppg++;
+        routerCore7.pppg++ <--> e19: NormalP <--> routerCore8.pppg++;
+        routerCore8.pppg++ <--> e20: NormalP <--> routerCore9.pppg++;
+        client16.pppg++ <--> e21: NormalP <--> routerCore4.pppg++;
+        client17.pppg++ <--> e22: NormalP <--> routerCore5.pppg++;
+        client18.pppg++ <--> e23: NormalP <--> routerCore6.pppg++;
+        client19.pppg++ <--> e24: NormalP <--> routerCore7.pppg++;
+        client110.pppg++ <--> e25: NormalP <--> routerCore8.pppg++;
+        client210.pppg++ <--> e26: NormalP <--> routerCore9.pppg++;
+        client26.pppg++ <--> e27: NormalP <--> routerCore5.pppg++;
+        client27.pppg++ <--> e28: NormalP <--> routerCore6.pppg++;
+        client28.pppg++ <--> e29: NormalP <--> routerCore7.pppg++;
+        client29.pppg++ <--> e30: NormalP <--> routerCore8.pppg++;
+}
+
 network DCTCPClos
 {
     parameters:
@@ -478,6 +908,1182 @@ network DCTCPClos
         Pod34.pppg++ <--> NormalP <--> Core3.pppg++;
 }
 
+network DCTCPClos2
+{
+    parameters:
+        @display("bgb=2020,857");
+    //        double ldelay @unit(s) = default(0.1s);
+    //        double ldatarate @unit(Mbps) = default(10Mbps);
+    types:
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                datarate = 10Gbps;
+                per = 0;
+                ber = 0;
+                delay = 13.33us;
+        }
+
+
+    submodules:
+        Pod01: SplitTCPRouter {
+            parameters:
+                @display("p=38,456;i=abstract/router");
+        }
+        client01: StandardHost2 {
+            parameters:
+                @display("p=33,600");
+        }
+        client02: StandardHost2 {
+            parameters:
+                @display("p=90,600");
+        }
+        client03: StandardHost2 {
+            parameters:
+                @display("p=150,600");
+        }
+        client04: StandardHost2 {
+            parameters:
+                @display("p=216,600");
+        }
+        configurator: IPv4NetworkConfigurator {
+            @display("p=924,116");
+        }
+        Pod03: SplitTCPRouter {
+            @display("p=39,414");
+        }
+        Pod04: SplitTCPRouter {
+            @display("p=150,414");
+        }
+        Pod02: SplitTCPRouter {
+            @display("p=155,456");
+        }
+        Core0: SplitTCPRouter {
+            @display("p=216,268");
+        }
+        Core1: SplitTCPRouter {
+            @display("p=307,268");
+        }
+        Core2: SplitTCPRouter {
+            @display("p=402,268");
+        }
+        Core3: SplitTCPRouter {
+            @display("p=486,268");
+        }
+        client1: StandardHost2 {
+            parameters:
+                @display("p=33,650");
+        }
+        client2: StandardHost2 {
+            parameters:
+                @display("p=90,650");
+        }
+        client3: StandardHost2 {
+            parameters:
+                @display("p=150,650");
+        }
+        client4: StandardHost2 {
+            parameters:
+                @display("p=216,650");
+        }
+        client5: StandardHost2 {
+            parameters:
+                @display("p=33,707");
+        }
+        client6: StandardHost2 {
+            parameters:
+                @display("p=90,707");
+        }
+        client7: StandardHost2 {
+            parameters:
+                @display("p=150,707");
+        }
+        client8: StandardHost2 {
+            parameters:
+                @display("p=216,707");
+        }
+        client9: StandardHost2 {
+            parameters:
+                @display("p=32,760");
+        }
+        client10: StandardHost2 {
+            parameters:
+                @display("p=89,760");
+        }
+        client15: StandardHost2 {
+            parameters:
+                @display("p=149,760");
+        }
+        client16: StandardHost2 {
+            parameters:
+                @display("p=215,760");
+        }
+        Pod1: SplitTCPRouter {
+            parameters:
+                @display("p=89,456;i=abstract/router");
+        }
+        Pod2: SplitTCPRouter {
+            @display("p=215,456");
+        }
+        Pod3: SplitTCPRouter {
+            @display("p=90,414");
+        }
+        Pod4: SplitTCPRouter {
+            @display("p=215,414");
+        }
+        Core4: SplitTCPRouter {
+            @display("p=586,268");
+        }
+        Core5: SplitTCPRouter {
+            @display("p=672,268");
+        }
+        Core6: SplitTCPRouter {
+            @display("p=774,268");
+        }
+        Core7: SplitTCPRouter {
+            @display("p=871,268");
+        }
+        Core8: SplitTCPRouter {
+            @display("p=964,268");
+        }
+        Core9: SplitTCPRouter {
+            @display("p=1053,268");
+        }
+        Core10: SplitTCPRouter {
+            @display("p=1148,268");
+        }
+        Core11: SplitTCPRouter {
+            @display("p=1245,268");
+        }
+        Core12: SplitTCPRouter {
+            @display("p=1344,268");
+        }
+        Core13: SplitTCPRouter {
+            @display("p=1435,268");
+        }
+        Core14: SplitTCPRouter {
+            @display("p=1537,268");
+        }
+        Core15: SplitTCPRouter {
+            @display("p=1634,268");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=277,600");
+        }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=277,650");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=334,600");
+        }
+        client14: StandardHost2 {
+            parameters:
+                @display("p=334,650");
+        }
+        client17: StandardHost2 {
+            parameters:
+                @display("p=394,600");
+        }
+        client18: StandardHost2 {
+            parameters:
+                @display("p=394,650");
+        }
+        client19: StandardHost2 {
+            parameters:
+                @display("p=460,600");
+        }
+        client20: StandardHost2 {
+            parameters:
+                @display("p=460,650");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=277,707");
+        }
+        client22: StandardHost2 {
+            parameters:
+                @display("p=334,707");
+        }
+        client23: StandardHost2 {
+            parameters:
+                @display("p=394,707");
+        }
+        client24: StandardHost2 {
+            parameters:
+                @display("p=460,707");
+        }
+        client25: StandardHost2 {
+            parameters:
+                @display("p=276,760");
+        }
+        client26: StandardHost2 {
+            parameters:
+                @display("p=333,760");
+        }
+        client27: StandardHost2 {
+            parameters:
+                @display("p=393,760");
+        }
+        client28: StandardHost2 {
+            parameters:
+                @display("p=459,760");
+        }
+        Pod5: SplitTCPRouter {
+            parameters:
+                @display("p=282,456;i=abstract/router");
+        }
+        Pod6: SplitTCPRouter {
+            parameters:
+                @display("p=333,456;i=abstract/router");
+        }
+        Pod7: SplitTCPRouter {
+            @display("p=399,456");
+        }
+        Pod8: SplitTCPRouter {
+            @display("p=459,456");
+        }
+        Pod9: SplitTCPRouter {
+            @display("p=283,414");
+        }
+        Pod10: SplitTCPRouter {
+            @display("p=334,414");
+        }
+        Pod11: SplitTCPRouter {
+            @display("p=394,414");
+        }
+        Pod12: SplitTCPRouter {
+            @display("p=459,414");
+        }
+        client29: StandardHost2 {
+            parameters:
+                @display("p=515,600");
+        }
+        client30: StandardHost2 {
+            parameters:
+                @display("p=515,650");
+        }
+        client31: StandardHost2 {
+            parameters:
+                @display("p=572,600");
+        }
+        client32: StandardHost2 {
+            parameters:
+                @display("p=572,650");
+        }
+        client33: StandardHost2 {
+            parameters:
+                @display("p=632,600");
+        }
+        client34: StandardHost2 {
+            parameters:
+                @display("p=632,650");
+        }
+        client35: StandardHost2 {
+            parameters:
+                @display("p=698,600");
+        }
+        client36: StandardHost2 {
+            parameters:
+                @display("p=698,650");
+        }
+        client37: StandardHost2 {
+            parameters:
+                @display("p=515,707");
+        }
+        client38: StandardHost2 {
+            parameters:
+                @display("p=572,707");
+        }
+        client39: StandardHost2 {
+            parameters:
+                @display("p=632,707");
+        }
+        client40: StandardHost2 {
+            parameters:
+                @display("p=698,707");
+        }
+        client41: StandardHost2 {
+            parameters:
+                @display("p=514,760");
+        }
+        client42: StandardHost2 {
+            parameters:
+                @display("p=571,760");
+        }
+        client43: StandardHost2 {
+            parameters:
+                @display("p=631,760");
+        }
+        client44: StandardHost2 {
+            parameters:
+                @display("p=697,760");
+        }
+        Pod13: SplitTCPRouter {
+            parameters:
+                @display("p=520,456;i=abstract/router");
+        }
+        Pod14: SplitTCPRouter {
+            parameters:
+                @display("p=571,456;i=abstract/router");
+        }
+        Pod15: SplitTCPRouter {
+            @display("p=637,456");
+        }
+        Pod16: SplitTCPRouter {
+            @display("p=697,456");
+        }
+        Pod17: SplitTCPRouter {
+            @display("p=521,414");
+        }
+        Pod18: SplitTCPRouter {
+            @display("p=572,414");
+        }
+        Pod19: SplitTCPRouter {
+            @display("p=632,414");
+        }
+        Pod20: SplitTCPRouter {
+            @display("p=697,414");
+        }
+        client45: StandardHost2 {
+            parameters:
+                @display("p=749,600");
+        }
+        client46: StandardHost2 {
+            parameters:
+                @display("p=749,650");
+        }
+        client47: StandardHost2 {
+            parameters:
+                @display("p=806,600");
+        }
+        client48: StandardHost2 {
+            parameters:
+                @display("p=806,650");
+        }
+        client49: StandardHost2 {
+            parameters:
+                @display("p=866,600");
+        }
+        client50: StandardHost2 {
+            parameters:
+                @display("p=866,650");
+        }
+        client51: StandardHost2 {
+            parameters:
+                @display("p=932,600");
+        }
+        client52: StandardHost2 {
+            parameters:
+                @display("p=932,650");
+        }
+        client53: StandardHost2 {
+            parameters:
+                @display("p=749,707");
+        }
+        client54: StandardHost2 {
+            parameters:
+                @display("p=806,707");
+        }
+        client55: StandardHost2 {
+            parameters:
+                @display("p=866,707");
+        }
+        client56: StandardHost2 {
+            parameters:
+                @display("p=932,707");
+        }
+        client57: StandardHost2 {
+            parameters:
+                @display("p=748,760");
+        }
+        client58: StandardHost2 {
+            parameters:
+                @display("p=805,760");
+        }
+        client59: StandardHost2 {
+            parameters:
+                @display("p=865,760");
+        }
+        client60: StandardHost2 {
+            parameters:
+                @display("p=931,760");
+        }
+        Pod21: SplitTCPRouter {
+            parameters:
+                @display("p=754,456;i=abstract/router");
+        }
+        Pod22: SplitTCPRouter {
+            parameters:
+                @display("p=805,456;i=abstract/router");
+        }
+        Pod23: SplitTCPRouter {
+            @display("p=871,456");
+        }
+        Pod24: SplitTCPRouter {
+            @display("p=931,456");
+        }
+        Pod25: SplitTCPRouter {
+            @display("p=755,414");
+        }
+        Pod26: SplitTCPRouter {
+            @display("p=806,414");
+        }
+        Pod27: SplitTCPRouter {
+            @display("p=866,414");
+        }
+        Pod28: SplitTCPRouter {
+            @display("p=931,414");
+        }
+        client61: StandardHost2 {
+            parameters:
+                @display("p=1015,600");
+        }
+        client62: StandardHost2 {
+            parameters:
+                @display("p=1015,650");
+        }
+        client63: StandardHost2 {
+            parameters:
+                @display("p=1072,600");
+        }
+        client64: StandardHost2 {
+            parameters:
+                @display("p=1072,650");
+        }
+        client65: StandardHost2 {
+            parameters:
+                @display("p=1132,600");
+        }
+        client66: StandardHost2 {
+            parameters:
+                @display("p=1132,650");
+        }
+        client67: StandardHost2 {
+            parameters:
+                @display("p=1198,600");
+        }
+        client68: StandardHost2 {
+            parameters:
+                @display("p=1198,650");
+        }
+        client69: StandardHost2 {
+            parameters:
+                @display("p=1015,707");
+        }
+        client70: StandardHost2 {
+            parameters:
+                @display("p=1072,707");
+        }
+        client71: StandardHost2 {
+            parameters:
+                @display("p=1132,707");
+        }
+        client72: StandardHost2 {
+            parameters:
+                @display("p=1198,707");
+        }
+        client73: StandardHost2 {
+            parameters:
+                @display("p=1014,760");
+        }
+        client74: StandardHost2 {
+            parameters:
+                @display("p=1071,760");
+        }
+        client75: StandardHost2 {
+            parameters:
+                @display("p=1259,600");
+        }
+        client76: StandardHost2 {
+            parameters:
+                @display("p=1259,650");
+        }
+        client77: StandardHost2 {
+            parameters:
+                @display("p=1316,600");
+        }
+        client78: StandardHost2 {
+            parameters:
+                @display("p=1316,650");
+        }
+        client79: StandardHost2 {
+            parameters:
+                @display("p=1131,760");
+        }
+        client80: StandardHost2 {
+            parameters:
+                @display("p=1197,760");
+        }
+        client81: StandardHost2 {
+            parameters:
+                @display("p=1376,600");
+        }
+        client82: StandardHost2 {
+            parameters:
+                @display("p=1376,650");
+        }
+        client83: StandardHost2 {
+            parameters:
+                @display("p=1442,600");
+        }
+        client84: StandardHost2 {
+            parameters:
+                @display("p=1442,650");
+        }
+        client85: StandardHost2 {
+            parameters:
+                @display("p=1259,707");
+        }
+        client86: StandardHost2 {
+            parameters:
+                @display("p=1316,707");
+        }
+        client87: StandardHost2 {
+            parameters:
+                @display("p=1376,707");
+        }
+        client88: StandardHost2 {
+            parameters:
+                @display("p=1442,707");
+        }
+        client89: StandardHost2 {
+            parameters:
+                @display("p=1258,760");
+        }
+        client90: StandardHost2 {
+            parameters:
+                @display("p=1315,760");
+        }
+        client91: StandardHost2 {
+            parameters:
+                @display("p=1375,760");
+        }
+        client92: StandardHost2 {
+            parameters:
+                @display("p=1441,760");
+        }
+        client93: StandardHost2 {
+            parameters:
+                @display("p=1497,600");
+        }
+        client94: StandardHost2 {
+            parameters:
+                @display("p=1497,650");
+        }
+        client95: StandardHost2 {
+            parameters:
+                @display("p=1554,600");
+        }
+        client96: StandardHost2 {
+            parameters:
+                @display("p=1554,650");
+        }
+        client97: StandardHost2 {
+            parameters:
+                @display("p=1614,600");
+        }
+        client98: StandardHost2 {
+            parameters:
+                @display("p=1614,650");
+        }
+        client99: StandardHost2 {
+            parameters:
+                @display("p=1680,600");
+        }
+        client100: StandardHost2 {
+            parameters:
+                @display("p=1680,650");
+        }
+        client101: StandardHost2 {
+            parameters:
+                @display("p=1497,707");
+        }
+        client102: StandardHost2 {
+            parameters:
+                @display("p=1554,707");
+        }
+        client103: StandardHost2 {
+            parameters:
+                @display("p=1614,707");
+        }
+        client104: StandardHost2 {
+            parameters:
+                @display("p=1680,707");
+        }
+        client105: StandardHost2 {
+            parameters:
+                @display("p=1496,760");
+        }
+        client106: StandardHost2 {
+            parameters:
+                @display("p=1553,760");
+        }
+        client107: StandardHost2 {
+            parameters:
+                @display("p=1613,760");
+        }
+        client108: StandardHost2 {
+            parameters:
+                @display("p=1679,760");
+        }
+        client109: StandardHost2 {
+            parameters:
+                @display("p=1731,600");
+        }
+        client110: StandardHost2 {
+            parameters:
+                @display("p=1731,650");
+        }
+        client111: StandardHost2 {
+            parameters:
+                @display("p=1788,600");
+        }
+        client112: StandardHost2 {
+            parameters:
+                @display("p=1788,650");
+        }
+        client113: StandardHost2 {
+            parameters:
+                @display("p=1848,600");
+        }
+        client114: StandardHost2 {
+            parameters:
+                @display("p=1848,650");
+        }
+        client115: StandardHost2 {
+            parameters:
+                @display("p=1914,600");
+        }
+        client116: StandardHost2 {
+            parameters:
+                @display("p=1914,650");
+        }
+        client117: StandardHost2 {
+            parameters:
+                @display("p=1731,707");
+        }
+        client118: StandardHost2 {
+            parameters:
+                @display("p=1788,707");
+        }
+        client119: StandardHost2 {
+            parameters:
+                @display("p=1848,707");
+        }
+        client120: StandardHost2 {
+            parameters:
+                @display("p=1914,707");
+        }
+        client121: StandardHost2 {
+            parameters:
+                @display("p=1730,760");
+        }
+        client122: StandardHost2 {
+            parameters:
+                @display("p=1787,760");
+        }
+        client123: StandardHost2 {
+            parameters:
+                @display("p=1847,760");
+        }
+        client124: StandardHost2 {
+            parameters:
+                @display("p=1913,760");
+        }
+        Pod29: SplitTCPRouter {
+            parameters:
+                @display("p=1020,456;i=abstract/router");
+        }
+        Pod30: SplitTCPRouter {
+            parameters:
+                @display("p=1071,456;i=abstract/router");
+        }
+        Pod31: SplitTCPRouter {
+            @display("p=1137,456");
+        }
+        Pod32: SplitTCPRouter {
+            @display("p=1197,456");
+        }
+        Pod33: SplitTCPRouter {
+            @display("p=1021,414");
+        }
+        Pod34: SplitTCPRouter {
+            @display("p=1072,414");
+        }
+        Pod35: SplitTCPRouter {
+            @display("p=1132,414");
+        }
+        Pod36: SplitTCPRouter {
+            @display("p=1197,414");
+        }
+        Pod37: SplitTCPRouter {
+            parameters:
+                @display("p=1264,456;i=abstract/router");
+        }
+        Pod38: SplitTCPRouter {
+            parameters:
+                @display("p=1315,456;i=abstract/router");
+        }
+        Pod39: SplitTCPRouter {
+            @display("p=1381,456");
+        }
+        Pod40: SplitTCPRouter {
+            @display("p=1441,456");
+        }
+        Pod41: SplitTCPRouter {
+            @display("p=1265,414");
+        }
+        Pod42: SplitTCPRouter {
+            @display("p=1316,414");
+        }
+        Pod43: SplitTCPRouter {
+            @display("p=1376,414");
+        }
+        Pod44: SplitTCPRouter {
+            @display("p=1441,414");
+        }
+        Pod45: SplitTCPRouter {
+            parameters:
+                @display("p=1502,456;i=abstract/router");
+        }
+        Pod46: SplitTCPRouter {
+            parameters:
+                @display("p=1553,456;i=abstract/router");
+        }
+        Pod47: SplitTCPRouter {
+            @display("p=1619,456");
+        }
+        Pod48: SplitTCPRouter {
+            @display("p=1679,456");
+        }
+        Pod49: SplitTCPRouter {
+            @display("p=1503,414");
+        }
+        Pod50: SplitTCPRouter {
+            @display("p=1554,414");
+        }
+        Pod51: SplitTCPRouter {
+            @display("p=1614,414");
+        }
+        Pod52: SplitTCPRouter {
+            @display("p=1679,414");
+        }
+        Pod53: SplitTCPRouter {
+            parameters:
+                @display("p=1736,456;i=abstract/router");
+        }
+        Pod54: SplitTCPRouter {
+            parameters:
+                @display("p=1787,456;i=abstract/router");
+        }
+        Pod55: SplitTCPRouter {
+            @display("p=1853,456");
+        }
+        Pod56: SplitTCPRouter {
+            @display("p=1913,456");
+        }
+        Pod57: SplitTCPRouter {
+            @display("p=1737,414");
+        }
+        Pod58: SplitTCPRouter {
+            @display("p=1788,414");
+        }
+        Pod59: SplitTCPRouter {
+            @display("p=1848,414");
+        }
+        Pod60: SplitTCPRouter {
+            @display("p=1913,414");
+        }
+    connections:
+        Pod01.pppg++ <--> NormalP <--> client02.pppg++;
+        Pod01.pppg++ <--> NormalP <--> Pod03.pppg++;
+        Pod01.pppg++ <--> NormalP <--> Pod04.pppg++;
+        Pod02.pppg++ <--> NormalP <--> Pod03.pppg++;
+        Pod02.pppg++ <--> NormalP <--> Pod04.pppg++;
+        Pod01.pppg++ <--> Pod3.pppg++;
+        Pod01.pppg++ <--> Pod4.pppg++;
+        Pod1.pppg++ <--> Pod03.pppg++;
+        Pod1.pppg++ <--> Pod3.pppg++;
+        Pod1.pppg++ <--> Pod04.pppg++;
+        Pod1.pppg++ <--> Pod4.pppg++;
+        Pod02.pppg++ <--> Pod3.pppg++;
+        Pod02.pppg++ <--> Pod4.pppg++;
+        Pod2.pppg++ <--> Pod4.pppg++;
+        Pod2.pppg++ <--> Pod04.pppg++;
+        Pod2.pppg++ <--> Pod3.pppg++;
+        Pod2.pppg++ <--> Pod03.pppg++;
+        client01.pppg++ <--> Pod01.pppg++;
+        client03.pppg++ <--> Pod01.pppg++;
+        client04.pppg++ <--> Pod01.pppg++;
+        client1.pppg++ <--> Pod1.pppg++;
+        client2.pppg++ <--> Pod1.pppg++;
+        client3.pppg++ <--> Pod1.pppg++;
+        client4.pppg++ <--> Pod1.pppg++;
+        client5.pppg++ <--> Pod02.pppg++;
+        client6.pppg++ <--> Pod02.pppg++;
+        client7.pppg++ <--> Pod02.pppg++;
+        client8.pppg++ <--> Pod02.pppg++;
+        client9.pppg++ <--> Pod2.pppg++;
+        client10.pppg++ <--> Pod2.pppg++;
+        client15.pppg++ <--> Pod2.pppg++;
+        client16.pppg++ <--> Pod2.pppg++;
+        Pod03.pppg++ <--> Core0.pppg++;
+        Pod03.pppg++ <--> Core1.pppg++;
+        Pod03.pppg++ <--> Core2.pppg++;
+        Pod03.pppg++ <--> Core3.pppg++;
+        Pod3.pppg++ <--> Core4.pppg++;
+        Pod3.pppg++ <--> Core5.pppg++;
+        Pod3.pppg++ <--> Core6.pppg++;
+        Pod3.pppg++ <--> Core7.pppg++;
+        Pod04.pppg++ <--> Core8.pppg++;
+        Pod04.pppg++ <--> Core9.pppg++;
+        Pod04.pppg++ <--> Core10.pppg++;
+        Pod04.pppg++ <--> Core11.pppg++;
+        Pod4.pppg++ <--> Core12.pppg++;
+        Pod4.pppg++ <--> Core13.pppg++;
+        Pod4.pppg++ <--> Core14.pppg++;
+        Pod4.pppg++ <--> Core15.pppg++;
+        Pod5.pppg++ <--> NormalP <--> client13.pppg++;
+        Pod5.pppg++ <--> NormalP <--> Pod9.pppg++;
+        Pod5.pppg++ <--> NormalP <--> Pod11.pppg++;
+        Pod7.pppg++ <--> NormalP <--> Pod9.pppg++;
+        Pod7.pppg++ <--> NormalP <--> Pod11.pppg++;
+        client25.pppg++ <--> Pod8.pppg++;
+        client11.pppg++ <--> Pod5.pppg++;
+        client12.pppg++ <--> Pod6.pppg++;
+        client24.pppg++ <--> Pod7.pppg++;
+        client18.pppg++ <--> Pod6.pppg++;
+        Pod8.pppg++ <--> Pod12.pppg++;
+        Pod8.pppg++ <--> Pod11.pppg++;
+        Pod8.pppg++ <--> Pod10.pppg++;
+        Pod8.pppg++ <--> Pod9.pppg++;
+        client14.pppg++ <--> Pod6.pppg++;
+        client27.pppg++ <--> Pod8.pppg++;
+        client21.pppg++ <--> Pod7.pppg++;
+        client26.pppg++ <--> Pod8.pppg++;
+        client19.pppg++ <--> Pod5.pppg++;
+        client28.pppg++ <--> Pod8.pppg++;
+        client17.pppg++ <--> Pod5.pppg++;
+        client22.pppg++ <--> Pod7.pppg++;
+        client20.pppg++ <--> Pod6.pppg++;
+        Pod6.pppg++ <--> Pod9.pppg++;
+        Pod6.pppg++ <--> Pod10.pppg++;
+        Pod6.pppg++ <--> Pod11.pppg++;
+        Pod6.pppg++ <--> Pod12.pppg++;
+        Pod5.pppg++ <--> Pod10.pppg++;
+        Pod5.pppg++ <--> Pod12.pppg++;
+        Pod7.pppg++ <--> Pod10.pppg++;
+        Pod7.pppg++ <--> Pod12.pppg++;
+        client23.pppg++ <--> Pod7.pppg++;
+        Pod9.pppg++ <--> Core0.pppg++;
+        Pod9.pppg++ <--> Core1.pppg++;
+        Pod9.pppg++ <--> Core2.pppg++;
+        Pod9.pppg++ <--> Core3.pppg++;
+        Pod10.pppg++ <--> Core4.pppg++;
+        Pod10.pppg++ <--> Core5.pppg++;
+        Pod10.pppg++ <--> Core6.pppg++;
+        Pod10.pppg++ <--> Core7.pppg++;
+        Pod11.pppg++ <--> Core8.pppg++;
+        Pod11.pppg++ <--> Core9.pppg++;
+        Pod11.pppg++ <--> Core10.pppg++;
+        Pod11.pppg++ <--> Core11.pppg++;
+        Pod12.pppg++ <--> Core12.pppg++;
+        Pod12.pppg++ <--> Core13.pppg++;
+        Pod12.pppg++ <--> Core14.pppg++;
+        Pod12.pppg++ <--> Core15.pppg++;
+        Pod13.pppg++ <--> NormalP <--> client31.pppg++;
+        Pod13.pppg++ <--> NormalP <--> Pod17.pppg++;
+        Pod13.pppg++ <--> NormalP <--> Pod19.pppg++;
+        Pod15.pppg++ <--> NormalP <--> Pod17.pppg++;
+        Pod15.pppg++ <--> NormalP <--> Pod19.pppg++;
+        client32.pppg++ <--> Pod14.pppg++;
+        client35.pppg++ <--> Pod13.pppg++;
+        client38.pppg++ <--> Pod15.pppg++;
+        Pod14.pppg++ <--> Pod17.pppg++;
+        Pod14.pppg++ <--> Pod18.pppg++;
+        Pod14.pppg++ <--> Pod19.pppg++;
+        Pod14.pppg++ <--> Pod20.pppg++;
+        Pod13.pppg++ <--> Pod18.pppg++;
+        Pod13.pppg++ <--> Pod20.pppg++;
+        client29.pppg++ <--> Pod13.pppg++;
+        client34.pppg++ <--> Pod14.pppg++;
+        client40.pppg++ <--> Pod15.pppg++;
+        client39.pppg++ <--> Pod15.pppg++;
+        client30.pppg++ <--> Pod14.pppg++;
+        client36.pppg++ <--> Pod14.pppg++;
+        Pod15.pppg++ <--> Pod18.pppg++;
+        Pod15.pppg++ <--> Pod20.pppg++;
+        client43.pppg++ <--> Pod16.pppg++;
+        client44.pppg++ <--> Pod16.pppg++;
+        Pod16.pppg++ <--> Pod20.pppg++;
+        Pod16.pppg++ <--> Pod19.pppg++;
+        Pod16.pppg++ <--> Pod18.pppg++;
+        Pod16.pppg++ <--> Pod17.pppg++;
+        client42.pppg++ <--> Pod16.pppg++;
+        client41.pppg++ <--> Pod16.pppg++;
+        client37.pppg++ <--> Pod15.pppg++;
+        client33.pppg++ <--> Pod13.pppg++;
+        Pod17.pppg++ <--> Core0.pppg++;
+        Pod17.pppg++ <--> Core1.pppg++;
+        Pod17.pppg++ <--> Core2.pppg++;
+        Pod17.pppg++ <--> Core3.pppg++;
+        Pod18.pppg++ <--> Core4.pppg++;
+        Pod18.pppg++ <--> Core5.pppg++;
+        Pod18.pppg++ <--> Core6.pppg++;
+        Pod18.pppg++ <--> Core7.pppg++;
+        Pod19.pppg++ <--> Core8.pppg++;
+        Pod19.pppg++ <--> Core9.pppg++;
+        Pod19.pppg++ <--> Core10.pppg++;
+        Pod19.pppg++ <--> Core11.pppg++;
+        Pod20.pppg++ <--> Core12.pppg++;
+        Pod20.pppg++ <--> Core13.pppg++;
+        Pod20.pppg++ <--> Core14.pppg++;
+        Pod20.pppg++ <--> Core15.pppg++;
+        Pod23.pppg++ <--> NormalP <--> Pod25.pppg++;
+        Pod23.pppg++ <--> NormalP <--> Pod27.pppg++;
+        Pod21.pppg++ <--> NormalP <--> client47.pppg++;
+        Pod21.pppg++ <--> NormalP <--> Pod25.pppg++;
+        Pod21.pppg++ <--> NormalP <--> Pod27.pppg++;
+        client53.pppg++ <--> Pod23.pppg++;
+        client58.pppg++ <--> Pod24.pppg++;
+        client57.pppg++ <--> Pod24.pppg++;
+        client45.pppg++ <--> Pod21.pppg++;
+        client46.pppg++ <--> Pod22.pppg++;
+        Pod23.pppg++ <--> Pod26.pppg++;
+        Pod23.pppg++ <--> Pod28.pppg++;
+        client55.pppg++ <--> Pod23.pppg++;
+        client49.pppg++ <--> Pod21.pppg++;
+        Pod22.pppg++ <--> Pod25.pppg++;
+        Pod22.pppg++ <--> Pod26.pppg++;
+        Pod22.pppg++ <--> Pod27.pppg++;
+        Pod22.pppg++ <--> Pod28.pppg++;
+        client54.pppg++ <--> Pod23.pppg++;
+        client59.pppg++ <--> Pod24.pppg++;
+        client56.pppg++ <--> Pod23.pppg++;
+        client51.pppg++ <--> Pod21.pppg++;
+        Pod21.pppg++ <--> Pod26.pppg++;
+        Pod21.pppg++ <--> Pod28.pppg++;
+        client52.pppg++ <--> Pod22.pppg++;
+        client60.pppg++ <--> Pod24.pppg++;
+        client50.pppg++ <--> Pod22.pppg++;
+        client48.pppg++ <--> Pod22.pppg++;
+        Pod24.pppg++ <--> Pod28.pppg++;
+        Pod24.pppg++ <--> Pod27.pppg++;
+        Pod24.pppg++ <--> Pod26.pppg++;
+        Pod24.pppg++ <--> Pod25.pppg++;
+        Pod25.pppg++ <--> Core0.pppg++;
+        Pod25.pppg++ <--> Core1.pppg++;
+        Pod25.pppg++ <--> Core2.pppg++;
+        Pod25.pppg++ <--> Core3.pppg++;
+        Pod26.pppg++ <--> Core4.pppg++;
+        Pod26.pppg++ <--> Core5.pppg++;
+        Pod26.pppg++ <--> Core6.pppg++;
+        Pod26.pppg++ <--> Core7.pppg++;
+        Pod27.pppg++ <--> Core8.pppg++;
+        Pod27.pppg++ <--> Core9.pppg++;
+        Pod27.pppg++ <--> Core10.pppg++;
+        Pod27.pppg++ <--> Core11.pppg++;
+        Pod28.pppg++ <--> Core12.pppg++;
+        Pod28.pppg++ <--> Core13.pppg++;
+        Pod28.pppg++ <--> Core14.pppg++;
+        Pod28.pppg++ <--> Core15.pppg++;
+        Pod29.pppg++ <--> NormalP <--> client63.pppg++;
+        Pod29.pppg++ <--> NormalP <--> Pod33.pppg++;
+        Pod29.pppg++ <--> NormalP <--> Pod35.pppg++;
+        Pod31.pppg++ <--> NormalP <--> Pod33.pppg++;
+        Pod31.pppg++ <--> NormalP <--> Pod35.pppg++;
+        Pod55.pppg++ <--> NormalP <--> Pod57.pppg++;
+        Pod55.pppg++ <--> NormalP <--> Pod59.pppg++;
+        Pod37.pppg++ <--> NormalP <--> client77.pppg++;
+        Pod37.pppg++ <--> NormalP <--> Pod41.pppg++;
+        Pod37.pppg++ <--> NormalP <--> Pod43.pppg++;
+        Pod39.pppg++ <--> NormalP <--> Pod41.pppg++;
+        Pod39.pppg++ <--> NormalP <--> Pod43.pppg++;
+        Pod53.pppg++ <--> NormalP <--> client111.pppg++;
+        Pod53.pppg++ <--> NormalP <--> Pod57.pppg++;
+        Pod53.pppg++ <--> NormalP <--> Pod59.pppg++;
+        Pod47.pppg++ <--> NormalP <--> Pod49.pppg++;
+        Pod47.pppg++ <--> NormalP <--> Pod51.pppg++;
+        Pod45.pppg++ <--> NormalP <--> client95.pppg++;
+        Pod45.pppg++ <--> NormalP <--> Pod49.pppg++;
+        Pod45.pppg++ <--> NormalP <--> Pod51.pppg++;
+        client78.pppg++ <--> Pod38.pppg++;
+        client62.pppg++ <--> Pod30.pppg++;
+        client113.pppg++ <--> Pod53.pppg++;
+        client72.pppg++ <--> Pod31.pppg++;
+        Pod32.pppg++ <--> Pod36.pppg++;
+        Pod32.pppg++ <--> Pod35.pppg++;
+        Pod32.pppg++ <--> Pod34.pppg++;
+        Pod32.pppg++ <--> Pod33.pppg++;
+        client64.pppg++ <--> Pod30.pppg++;
+        client82.pppg++ <--> Pod38.pppg++;
+        client87.pppg++ <--> Pod39.pppg++;
+        client74.pppg++ <--> Pod32.pppg++;
+        client76.pppg++ <--> Pod38.pppg++;
+        client107.pppg++ <--> Pod48.pppg++;
+        client67.pppg++ <--> Pod29.pppg++;
+        client104.pppg++ <--> Pod47.pppg++;
+        client99.pppg++ <--> Pod45.pppg++;
+        client115.pppg++ <--> Pod53.pppg++;
+        client100.pppg++ <--> Pod46.pppg++;
+        client92.pppg++ <--> Pod40.pppg++;
+        client124.pppg++ <--> Pod56.pppg++;
+        Pod56.pppg++ <--> Pod60.pppg++;
+        Pod56.pppg++ <--> Pod59.pppg++;
+        Pod56.pppg++ <--> Pod58.pppg++;
+        Pod56.pppg++ <--> Pod57.pppg++;
+        client109.pppg++ <--> Pod53.pppg++;
+        client90.pppg++ <--> Pod40.pppg++;
+        client108.pppg++ <--> Pod48.pppg++;
+        Pod29.pppg++ <--> Pod34.pppg++;
+        Pod29.pppg++ <--> Pod36.pppg++;
+        client89.pppg++ <--> Pod40.pppg++;
+        client85.pppg++ <--> Pod39.pppg++;
+        Pod31.pppg++ <--> Pod34.pppg++;
+        Pod31.pppg++ <--> Pod36.pppg++;
+        client119.pppg++ <--> Pod55.pppg++;
+        Pod55.pppg++ <--> Pod58.pppg++;
+        Pod55.pppg++ <--> Pod60.pppg++;
+        Pod38.pppg++ <--> Pod41.pppg++;
+        Pod38.pppg++ <--> Pod42.pppg++;
+        Pod38.pppg++ <--> Pod43.pppg++;
+        Pod38.pppg++ <--> Pod44.pppg++;
+        client66.pppg++ <--> Pod30.pppg++;
+        client94.pppg++ <--> Pod46.pppg++;
+        client102.pppg++ <--> Pod47.pppg++;
+        client79.pppg++ <--> Pod32.pppg++;
+        client91.pppg++ <--> Pod40.pppg++;
+        client114.pppg++ <--> Pod54.pppg++;
+        Pod54.pppg++ <--> Pod57.pppg++;
+        Pod54.pppg++ <--> Pod58.pppg++;
+        Pod54.pppg++ <--> Pod59.pppg++;
+        Pod54.pppg++ <--> Pod60.pppg++;
+        client122.pppg++ <--> Pod56.pppg++;
+        Pod30.pppg++ <--> Pod33.pppg++;
+        Pod30.pppg++ <--> Pod34.pppg++;
+        Pod30.pppg++ <--> Pod35.pppg++;
+        Pod30.pppg++ <--> Pod36.pppg++;
+        client71.pppg++ <--> Pod31.pppg++;
+        client110.pppg++ <--> Pod54.pppg++;
+        client101.pppg++ <--> Pod47.pppg++;
+        client61.pppg++ <--> Pod29.pppg++;
+        client86.pppg++ <--> Pod39.pppg++;
+        client105.pppg++ <--> Pod48.pppg++;
+        Pod37.pppg++ <--> Pod42.pppg++;
+        Pod37.pppg++ <--> Pod44.pppg++;
+        client112.pppg++ <--> Pod54.pppg++;
+        client103.pppg++ <--> Pod47.pppg++;
+        Pod39.pppg++ <--> Pod42.pppg++;
+        Pod39.pppg++ <--> Pod44.pppg++;
+        client70.pppg++ <--> Pod31.pppg++;
+        client118.pppg++ <--> Pod55.pppg++;
+        client120.pppg++ <--> Pod55.pppg++;
+        client98.pppg++ <--> Pod46.pppg++;
+        client96.pppg++ <--> Pod46.pppg++;
+        Pod48.pppg++ <--> Pod52.pppg++;
+        Pod48.pppg++ <--> Pod51.pppg++;
+        Pod48.pppg++ <--> Pod50.pppg++;
+        Pod48.pppg++ <--> Pod49.pppg++;
+        client121.pppg++ <--> Pod56.pppg++;
+        client83.pppg++ <--> Pod37.pppg++;
+        client123.pppg++ <--> Pod56.pppg++;
+        client73.pppg++ <--> Pod32.pppg++;
+        client106.pppg++ <--> Pod48.pppg++;
+        Pod53.pppg++ <--> Pod58.pppg++;
+        Pod53.pppg++ <--> Pod60.pppg++;
+        client93.pppg++ <--> Pod45.pppg++;
+        client97.pppg++ <--> Pod45.pppg++;
+        Pod47.pppg++ <--> Pod50.pppg++;
+        Pod47.pppg++ <--> Pod52.pppg++;
+        client75.pppg++ <--> Pod37.pppg++;
+        client116.pppg++ <--> Pod54.pppg++;
+        Pod46.pppg++ <--> Pod49.pppg++;
+        Pod46.pppg++ <--> Pod50.pppg++;
+        Pod46.pppg++ <--> Pod51.pppg++;
+        Pod46.pppg++ <--> Pod52.pppg++;
+        client88.pppg++ <--> Pod39.pppg++;
+        client69.pppg++ <--> Pod31.pppg++;
+        client117.pppg++ <--> Pod55.pppg++;
+        client84.pppg++ <--> Pod38.pppg++;
+        client80.pppg++ <--> Pod32.pppg++;
+        client65.pppg++ <--> Pod29.pppg++;
+        Pod45.pppg++ <--> Pod50.pppg++;
+        Pod45.pppg++ <--> Pod52.pppg++;
+        Pod40.pppg++ <--> Pod44.pppg++;
+        Pod40.pppg++ <--> Pod43.pppg++;
+        Pod40.pppg++ <--> Pod42.pppg++;
+        Pod40.pppg++ <--> Pod41.pppg++;
+        client68.pppg++ <--> Pod30.pppg++;
+        client81.pppg++ <--> Pod37.pppg++;
+        Pod33.pppg++ <--> Core0.pppg++;
+        Pod33.pppg++ <--> Core1.pppg++;
+        Pod33.pppg++ <--> Core2.pppg++;
+        Pod33.pppg++ <--> Core3.pppg++;
+        Pod34.pppg++ <--> Core4.pppg++;
+        Pod34.pppg++ <--> Core5.pppg++;
+        Pod34.pppg++ <--> Core6.pppg++;
+        Pod34.pppg++ <--> Core7.pppg++;
+        Pod35.pppg++ <--> Core8.pppg++;
+        Pod35.pppg++ <--> Core9.pppg++;
+        Pod35.ethg++ <--> Core10.ethg++;
+        Pod35.pppg++ <--> Core11.pppg++;
+        Pod36.pppg++ <--> Core12.pppg++;
+        Pod36.pppg++ <--> Core13.pppg++;
+        Pod36.pppg++ <--> Core14.pppg++;
+        Pod36.pppg++ <--> Core15.pppg++;
+        Pod41.pppg++ <--> Core0.pppg++;
+        Pod41.pppg++ <--> Core1.pppg++;
+        Pod41.pppg++ <--> Core2.pppg++;
+        Pod41.pppg++ <--> Core3.pppg++;
+        Pod42.pppg++ <--> Core4.pppg++;
+        Pod42.pppg++ <--> Core5.pppg++;
+        Pod42.pppg++ <--> Core6.pppg++;
+        Pod42.pppg++ <--> Core7.pppg++;
+        Pod43.pppg++ <--> Core8.pppg++;
+        Pod43.pppg++ <--> Core9.pppg++;
+        Pod43.pppg++ <--> Core10.pppg++;
+        Pod43.pppg++ <--> Core11.pppg++;
+        Pod44.pppg++ <--> Core12.pppg++;
+        Pod44.pppg++ <--> Core13.pppg++;
+        Pod44.pppg++ <--> Core14.pppg++;
+        Pod44.pppg++ <--> Core15.pppg++;
+        Pod49.pppg++ <--> Core0.pppg++;
+        Pod49.pppg++ <--> Core1.pppg++;
+        Pod49.pppg++ <--> Core2.pppg++;
+        Pod49.pppg++ <--> Core3.pppg++;
+        Pod50.pppg++ <--> Core4.pppg++;
+        Pod50.pppg++ <--> Core5.pppg++;
+        Pod50.pppg++ <--> Core6.pppg++;
+        Pod50.pppg++ <--> Core7.pppg++;
+        Pod51.pppg++ <--> Core8.pppg++;
+        Pod51.pppg++ <--> Core9.pppg++;
+        Pod51.pppg++ <--> Core10.pppg++;
+        Pod51.pppg++ <--> Core11.pppg++;
+        Pod52.pppg++ <--> Core12.pppg++;
+        Pod52.pppg++ <--> Core13.pppg++;
+        Pod52.pppg++ <--> Core14.pppg++;
+        Pod52.pppg++ <--> Core15.pppg++;
+        Pod57.pppg++ <--> Core0.pppg++;
+        Pod57.pppg++ <--> Core1.pppg++;
+        Pod57.pppg++ <--> Core2.pppg++;
+        Pod57.pppg++ <--> Core3.pppg++;
+        Pod58.pppg++ <--> Core4.pppg++;
+        Pod58.pppg++ <--> Core5.pppg++;
+        Pod58.pppg++ <--> Core6.pppg++;
+        Pod58.pppg++ <--> Core7.pppg++;
+        Pod59.pppg++ <--> Core8.pppg++;
+        Pod59.pppg++ <--> Core9.pppg++;
+        Pod59.pppg++ <--> Core10.pppg++;
+        Pod59.pppg++ <--> Core11.pppg++;
+        Pod60.pppg++ <--> Core12.pppg++;
+        Pod60.pppg++ <--> Core13.pppg++;
+        Pod60.pppg++ <--> Core14.pppg++;
+        Pod60.pppg++ <--> Core15.pppg++;
+}
+
 network DCTCPLeafSpine
 {
     parameters:
@@ -509,7 +2115,7 @@ network DCTCPLeafSpine
                 @display("p=110,233;i=abstract/router");
         }
         configurator: IPv4NetworkConfigurator {
-            @display("p=976,64");
+            @display("p=1777,45");
         }
         Spine1: SplitTCPRouter {
             @display("p=562,91");

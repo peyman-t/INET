@@ -98,7 +98,7 @@ TCPBaseAlg::TCPBaseAlg() : TCPAlgorithm(),
         state((TCPBaseAlgStateVariables *&)TCPAlgorithm::state)
 {
     rexmitTimer = persistTimer = delayedAckTimer = keepAliveTimer = paceTimer = rateUpdateTimer = NULL;
-    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector  = calcLoadVector = brVector = interPSpaceVector = NULL;
+    cwndVector = ssthreshVector = rttVector = srttVector = rttvarVector = rtoVector = numRtosVector = loadVector  = calcLoadVector = brVector = interPSpaceVector = carryingCapacity = markingProb = NULL;
 }
 
 TCPBaseAlg::~TCPBaseAlg()
@@ -125,6 +125,8 @@ TCPBaseAlg::~TCPBaseAlg()
     delete calcLoadVector;
     delete brVector;
     delete interPSpaceVector;
+    delete carryingCapacity;
+    delete markingProb;
 }
 
 void TCPBaseAlg::initialize()
@@ -159,6 +161,8 @@ void TCPBaseAlg::initialize()
             calcLoadVector = new cOutVector("calcLoad");
             brVector = new cOutVector("birthRate");
             interPSpaceVector = new cOutVector("interPSpace");
+            carryingCapacity = new cOutVector("carryingCapacity");
+            markingProb = new cOutVector("markingProb");
         }
     } else {
         if (conn->tcpMain2->recordStatistics)
@@ -174,6 +178,8 @@ void TCPBaseAlg::initialize()
             calcLoadVector = new cOutVector("calcLoad");
             brVector = new cOutVector("birthRate");
             interPSpaceVector = new cOutVector("interPSpace");
+            carryingCapacity = new cOutVector("carryingCapacity");
+            markingProb = new cOutVector("markingProb");
         }
     }
 }

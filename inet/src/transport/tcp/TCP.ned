@@ -214,6 +214,8 @@ simple TCP like ITCP
         bool recordStats = default(true); // recording of seqNum etc. into output vectors enabled/disabled
         string sendQueueClass = default("");    // Obsolete!!!
         string receiveQueueClass = default(""); // Obsolete!!!
+        double ldatarate @unit(bps) = default(10Mbps);
+        
         @display("i=block/wheelbarrow");
     gates:
         input appIn[] @labels(TCPCommand/down);

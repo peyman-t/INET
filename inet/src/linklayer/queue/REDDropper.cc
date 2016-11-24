@@ -35,6 +35,10 @@ REDDropper::~REDDropper()
     delete[] count;
     delete[] marks;
     q_time = 0;
+
+    delete marked;
+    delete markedSID;
+    delete markedNotSID;
 }
 
 void REDDropper::initialize()
@@ -84,6 +88,10 @@ void REDDropper::initialize()
         if (marks[i] != 0 && marks[i] != 1)
             throw cRuntimeError("Invalid value for marks parameter: %g", marks[i]);
     }
+
+    marked = new cOutVector("marked");
+    markedSID = new cOutVector("markedSID");
+    markedNotSID = new cOutVector("markedNotSID");
 }
 
 void REDDropper::markECN(cPacket *packet)
@@ -130,6 +138,11 @@ bool REDDropper::shouldDrop(cPacket *packet)
                 return true;
             else
                 markECN(packet);
+            marked->record(1);
+            markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        } else {
+            marked->record(0);
+            markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
         }
     }
     else if (avg >= maxth)
@@ -140,7 +153,9 @@ bool REDDropper::shouldDrop(cPacket *packet)
             return true;
         else
             markECN(packet);
-}
+        marked->record(1);
+        markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+    }
     else if (queueLength >= maxth)  // maxth is also the "hard" limit
     {
         EV << "Queue len " << queueLength << " >= maxth, dropping packet.\n";
@@ -149,10 +164,14 @@ bool REDDropper::shouldDrop(cPacket *packet)
             return true;
         else
             markECN(packet);
+        marked->record(1);
+        markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
     else
     {
         count[i] = -1;
+        marked->record(0);
+        markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
 
     return false;

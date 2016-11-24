@@ -124,6 +124,8 @@ class INET_API TCPBaseAlg : public TCPAlgorithm
     cOutVector *brVector; // will record total number of RTOs
     cOutVector *calcLoadVector; // will record total number of RTOs
     cOutVector *interPSpaceVector; // will record total number of RTOs
+    cOutVector *carryingCapacity; // will record total number of RTOs
+    cOutVector *markingProb; // will record total number of RTOs
 
   protected:
     /** @name Process REXMIT, PERSIST, DELAYED-ACK and KEEP-ALIVE timers */

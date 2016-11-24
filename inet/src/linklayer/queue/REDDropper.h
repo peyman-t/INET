@@ -40,8 +40,12 @@ class REDDropper : public AlgorithmicDropperBase
     double avg;
     simtime_t q_time;
 
+    cOutVector *marked;
+    cOutVector *markedSID;
+    cOutVector *markedNotSID;
+
   public:
-    REDDropper() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0) {}
+    REDDropper() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0) {marked = markedSID = markedNotSID = NULL;}
 
     void markECN(cPacket *packet);
   protected:

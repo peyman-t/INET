@@ -88,6 +88,7 @@ void LGTCP::processRexmitTimer(TCPEventCode& event)
 
 void LGTCP::processRateUpdateTimer(TCPEventCode& event)
 {
+
     if(state->lgcc_pacing) {
         TCPTahoeRenoFamily::processRateUpdateTimer(event);
 
@@ -95,6 +96,7 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
     }
 
     if(state->lgcc_cntr == 0) {
+        state->lgcc_phyRate = conn->tcpMain->par("ldatarate");
 //        state->minrtt = 0.000140;
         state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
     }
@@ -173,7 +175,18 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
 //            }
 
 //            state->lgcc_r = state->lgcc_rConv;
+
+/*    double nm = (state->lgcc_calcLoad > 0.5)? state->lgcc_calcLoad : 0.5;
+    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (nm - state->lgcc_load) + state->lgcc_rate;*/
     state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load) + state->lgcc_rate;
+
+//        if(state->lgcc_load >= 1) {
+//            if(state->lgcc_phyRate > 100000000)
+//                state->lgcc_phyRate *= 0.95;
+//        } else {
+//            if(state->lgcc_phyRate < 100000000000)
+//            state->lgcc_phyRate += 100000000;
+//        }
 
     uint32 newCwnd = state->lgcc_rate * state->lgcc_phyRate * (double)state->minrtt.dbl() / 8;
     if(newCwnd < 2 * state->snd_mss) {
@@ -186,6 +199,8 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
 
     state->snd_cwnd = newCwnd;
 
+    if (carryingCapacity)
+        carryingCapacity->record(state->lgcc_phyRate);
     if (cwndVector)
         cwndVector->record(state->snd_cwnd);
     if (brVector)
@@ -220,6 +235,9 @@ void LGTCP::processPaceTimer(TCPEventCode& event)
     if(state->snd_cwnd >= (state->snd_nxt - state->snd_una) + 2 * state->snd_mss)
         state->snd_cwnd = state->snd_mss + (state->snd_nxt - state->snd_una);
 
+//    if(state->snd_cwnd < (state->snd_nxt - state->snd_una) + 1 * state->snd_mss)
+//            state->snd_cwnd = state->snd_mss + (state->snd_nxt - state->snd_una);
+
     sendData(false);
 
     state->snd_cwnd = cwnd;
@@ -245,18 +263,21 @@ void LGTCP::receivedDataAck(uint32 firstSeqAcked)
     {
 //---------------LGCC
         state->dctcp_total++;
-        if(state->ece)
+        if(state->ece) {
             state->dctcp_marked++;
+            markingProb->record(1);
+        } else
+            markingProb->record(0);
 
-        if(!state->lgcc_sch_rate && state->lgcc_pacing) {
-            state->lgcc_sch_rate = true;
-            TCPEventCode event = TCP_E_IGNORE;
-            processRateUpdateTimer(event);
-            //conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
+        if(state->lgcc_pacing) {
+            if(!state->lgcc_sch_rate) {
+                state->lgcc_sch_rate = true;
+                TCPEventCode event = TCP_E_IGNORE;
+                processRateUpdateTimer(event);
+                //conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
+            }
             return;
-        }
-
-        if(!state->lgcc_pacing) {
+        } else {
             simtime_t now1 = simTime();
 
             if((now1 - state->dctcp_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
@@ -264,7 +285,24 @@ void LGTCP::receivedDataAck(uint32 firstSeqAcked)
                 processRateUpdateTimer(event);
             }
         }
-        return;
+
+//            if(!state->lgcc_sch_rate && state->lgcc_pacing) {
+//            state->lgcc_sch_rate = true;
+//            TCPEventCode event = TCP_E_IGNORE;
+//            processRateUpdateTimer(event);
+//            //conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
+//            return;
+//        }
+//
+//        if(!state->lgcc_pacing) {
+//            simtime_t now1 = simTime();
+//
+//            if((now1 - state->dctcp_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
+//                TCPEventCode event = TCP_E_IGNORE;
+//                processRateUpdateTimer(event);
+//            }
+//        }
+//        return;
 
 //goto l1;
 // Works!!!!!!!!!!!!!!!!!!!!!!!!!!!!
