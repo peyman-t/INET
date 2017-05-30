@@ -92,7 +92,7 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
     if(state->lgcc_pacing) {
         TCPTahoeRenoFamily::processRateUpdateTimer(event);
 
-        conn->scheduleRateUpdate(rateUpdateTimer, 0.0002);
+        conn->scheduleRateUpdate(rateUpdateTimer, 0.00048);
     }
 
     if(state->lgcc_cntr == 0) {
@@ -196,6 +196,10 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
             newCwnd = 2 * state->snd_mss;
         state->lgcc_rate = newCwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
     }
+
+    uint32 rCwnd = newCwnd / state->snd_mss;
+    if(rCwnd * state->snd_mss < newCwnd)
+        newCwnd = (rCwnd + 1) * state->snd_mss;
 
     state->snd_cwnd = newCwnd;
 

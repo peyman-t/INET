@@ -37,6 +37,10 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
 
     //DCTCP
     double dctcp_marked;
+    double dctcp_windEnd;
+    double dctcp_bytesAcked;
+    double dctcp_bytesMarked;
+    bool dctcp_CWR;
     double dctcp_total;
     double dctcp_totalSent;
     double dctcp_alpha;

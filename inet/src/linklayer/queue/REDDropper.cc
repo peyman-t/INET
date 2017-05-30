@@ -92,12 +92,32 @@ void REDDropper::initialize()
     marked = new cOutVector("marked");
     markedSID = new cOutVector("markedSID");
     markedNotSID = new cOutVector("markedNotSID");
+
+    markNext = false;
 }
 
 void REDDropper::markECN(cPacket *packet)
 {
+
+    if (isMarkedECN(packet)) {
+//        if(getLength() > 0)
+            markNext = true;
+        return;
+    }
+
+    if(!markNext) {
+        IPv4Datagram * ipPacket = check_and_cast<IPv4Datagram*>(packet);
+        ipPacket->setExplicitCongestionNotification(3);
+    } else
+        markNext = false;
+}
+
+bool REDDropper::isMarkedECN(cPacket *packet)
+{
     IPv4Datagram * ipPacket = check_and_cast<IPv4Datagram*>(packet);
-    ipPacket->setExplicitCongestionNotification(3);
+    if (ipPacket->getExplicitCongestionNotification() > 0)
+        return true;
+    return false;
 }
 
 bool REDDropper::shouldDrop(cPacket *packet)
@@ -122,6 +142,7 @@ bool REDDropper::shouldDrop(cPacket *packet)
         const double m = SIMTIME_DBL(simTime() - q_time) * pkrate;
         avg = pow(1 - wq, m) * avg;
     }
+
 
     if (minth <= avg && avg < maxth)
     {

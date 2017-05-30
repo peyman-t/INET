@@ -29,6 +29,8 @@
 class REDDropper : public AlgorithmicDropperBase
 {
   protected:
+    bool markNext;
+
     double wq;
     double *minths;
     double *maxths;
@@ -48,6 +50,7 @@ class REDDropper : public AlgorithmicDropperBase
     REDDropper() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0) {marked = markedSID = markedNotSID = NULL;}
 
     void markECN(cPacket *packet);
+    bool isMarkedECN(cPacket *packet);
   protected:
     virtual ~REDDropper();
     virtual void initialize();

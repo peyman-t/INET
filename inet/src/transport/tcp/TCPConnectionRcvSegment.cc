@@ -26,6 +26,7 @@
 #include "TCPSACKRexmitQueue.h"
 #include "TCPReceiveQueue.h"
 #include "TCPAlgorithm.h"
+#include "TCPTahoeRenoFamily.h"
 
 bool TCPConnection::tryFastRoute(TCPSegment *tcpseg)
 {
@@ -1326,6 +1327,15 @@ bool TCPConnection::processAckInEstabEtc(TCPSegment *tcpseg)
     }
     else if (seqLE(tcpseg->getAckNo(), state->snd_max))
     {
+
+        if(check_and_cast<TCPTahoeRenoFamilyStateVariables *>(state)) {
+            check_and_cast<TCPTahoeRenoFamilyStateVariables *>(state)->dctcp_bytesAcked += (tcpseg->getAckNo() - state->snd_una);
+
+            if(tcpseg->getEceBit()) {
+                check_and_cast<TCPTahoeRenoFamilyStateVariables *>(state)->dctcp_bytesMarked += (tcpseg->getAckNo() - state->snd_una);
+            }
+        }
+
         // ack in window.
         uint32 old_snd_una = state->snd_una;
         state->snd_una = tcpseg->getAckNo();
