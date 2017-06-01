@@ -59,6 +59,15 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
         ecnmarked[i] = 0;
         total[i] = 1;
     }
+
+    ecnnum_pacing = false;
+    ecnnum_lastCalcTime = 0;
+    ecnnum_maxRate = 100000000000; // 100 Gbps
+    ecnnum_Rate = 0;
+    ecnnum_cntr = 0;
+    ecnnum_fraction = 0;
+    ecnnum_alpha = 0.05;
+    ecnnum_phi = 10;
 }
 
 std::string TCPTahoeRenoFamilyStateVariables::info() const
