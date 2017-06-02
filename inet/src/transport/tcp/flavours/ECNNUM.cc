@@ -110,7 +110,9 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
     state->ecnnum_fraction = state->ecnnum_alpha * state->dctcp_marked / state->dctcp_total + (1 - state->ecnnum_alpha) * state->ecnnum_fraction;
 
     if (loadVector)
-        loadVector->record(state->ecnnum_fraction);
+        loadVector->record(state->dctcp_marked / state->dctcp_total);
+    if (calcLoadVector)
+        calcLoadVector->record(state->ecnnum_fraction);
 
 //    if(newCwnd * 8 / (double)state->minrtt.dbl() > state->ecnnum_maxRate) {
 //            newCwnd = state->ecnnum_maxRate / 8 * (double)state->minrtt.dbl();
@@ -122,10 +124,11 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
 //        state->ecnnum_Rate += (newCwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
         state->ecnnum_Rate++;
 
-    } else if(state->ecnnum_fraction == 1) {
+    } else if(state->dctcp_marked / state->dctcp_total == 1) {
 //        newCwnd /= 1.1;
 //        state->ecnnum_Rate = (newCwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
-        state->ecnnum_Rate--;
+        state->ecnnum_Rate /= 1.5;
+        state->ecnnum_fraction = 1 - std::pow(1 - state->ecnnum_fraction, 1.5);
     } else {
         double q = ( -std::log(1-state->ecnnum_fraction)  / std::log(state->ecnnum_phi)); //
         if((1 / q ) - state->ecnnum_Rate > 5)
