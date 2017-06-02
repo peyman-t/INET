@@ -119,20 +119,21 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
 //    }
 
 
-    if(state->ecnnum_fraction == 0) {
-//        newCwnd += state->snd_mss;
-//        state->ecnnum_Rate += (newCwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
-        state->ecnnum_Rate++;
-
-    } else if(state->dctcp_marked / state->dctcp_total == 1) {
+//    if(state->ecnnum_fraction == 0) {
+////        newCwnd += state->snd_mss;
+////        state->ecnnum_Rate += (newCwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
+//        state->ecnnum_Rate++;
+//
+//    } else
+        if(state->dctcp_marked / state->dctcp_total == 1) {
 //        newCwnd /= 1.1;
 //        state->ecnnum_Rate = (newCwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
         state->ecnnum_Rate /= 1.5;
         state->ecnnum_fraction = 1 - std::pow(1 - state->ecnnum_fraction, 1.5);
     } else {
         double q = ( -std::log(1-state->ecnnum_fraction)  / std::log(state->ecnnum_phi)); //
-        if((1 / q ) - state->ecnnum_Rate > 5)
-            state->ecnnum_Rate += 5;
+        if(q == 0 || (1 / q ) > 2 * state->ecnnum_Rate)
+            state->ecnnum_Rate *= 1.1;
         else
             state->ecnnum_Rate = (1 / q );
 //        state->ecnnum_Rate = state->ecnnum_alpha * (1 / state->ecnnum_Rate - q ) + state->ecnnum_Rate;
