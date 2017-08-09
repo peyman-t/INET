@@ -42,14 +42,14 @@ void PassiveQueueBase::handleMessage(cMessage *msg)
 {
     numQueueReceived++;
 
-    emit(rcvdPkSignal, msg);
+    //emit(rcvdPkSignal, msg);
 
     if (packetRequested > 0)
     {
         packetRequested--;
         emit(enqueuePkSignal, msg);
         emit(dequeuePkSignal, msg);
-        emit(queueingTimeSignal, SIMTIME_ZERO);
+        //emit(queueingTimeSignal, SIMTIME_ZERO);
         sendOut(msg);
     }
     else
@@ -89,7 +89,7 @@ void PassiveQueueBase::requestPacket()
     else
     {
         emit(dequeuePkSignal, msg);
-        emit(queueingTimeSignal, simTime() - msg->getArrivalTime());
+        //emit(queueingTimeSignal, simTime() - msg->getArrivalTime());
         sendOut(msg);
     }
 }

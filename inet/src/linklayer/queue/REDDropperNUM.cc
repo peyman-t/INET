@@ -158,10 +158,10 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
             else
                 markECN(packet);
             marked->record(1);
-            markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+            //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
         } else {
             marked->record(0);
-            markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+            //markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
         }
     }
     else if (avg >= maxth)
@@ -173,7 +173,7 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
         else
             markECN(packet);
         marked->record(1);
-        markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
     else if (queueLength >= maxth)  // maxth is also the "hard" limit
     {
@@ -184,13 +184,13 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
         else
             markECN(packet);
         marked->record(1);
-        markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
     else
     {
         count[i] = -1;
         marked->record(0);
-        markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        //markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
 
     return false;
