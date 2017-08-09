@@ -66,7 +66,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     ecnnum_Rate = 0;
     ecnnum_cntr = 0;
     ecnnum_fraction = 0;
-    ecnnum_alpha = 0.025;
+    ecnnum_alpha = 0.025; // 0.025;
     ecnnum_phi = 10;
 }
 

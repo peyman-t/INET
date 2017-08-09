@@ -70,7 +70,7 @@ void PPP::initialize(int stage)
 
         subscribe(POST_MODEL_CHANGE, this);
 
-        emit(txStateSignal, 0L);
+        //emit(txStateSignal, 0L);
 
         // find queueModule
         queueModule = NULL;
@@ -215,7 +215,7 @@ void PPP::refreshOutGateConnection(bool connected)
                 cMessage *msg = check_and_cast<cMessage *>(txQueue.pop());
                 EV << "Interface is not connected, dropping packet " << msg << endl;
                 numDroppedIfaceDown++;
-                emit(dropPkIfaceDownSignal, msg);
+                //emit(dropPkIfaceDownSignal, msg);
                 delete msg;
             }
         }
@@ -271,8 +271,8 @@ void PPP::startTransmitting(cPacket *msg)
 
     // send
     EV << "Starting transmission of " << pppFrame << endl;
-    emit(txStateSignal, 1L);
-    emit(packetSentToLowerSignal, pppFrame);
+    //emit(txStateSignal, 1L);
+    //emit(packetSentToLowerSignal, pppFrame);
     send(pppFrame, physOutGate);
 
     ASSERT(datarateChannel == physOutGate->getTransmissionChannel()); //FIXME reread datarateChannel when changed
@@ -295,7 +295,7 @@ void PPP::handleMessage(cMessage *msg)
     {
         // Transmission finished, we can start next one.
         EV << "Transmission finished.\n";
-        emit(txStateSignal, 0L);
+        //emit(txStateSignal, 0L);
 
         if (ev.isGUI())
             displayIdle();
@@ -323,13 +323,13 @@ void PPP::handleMessage(cMessage *msg)
         notifDetails.setPacket(PK(msg));
         nb->fireChangeNotification(NF_PP_RX_END, &notifDetails);
 
-        emit(packetReceivedFromLowerSignal, msg);
+        //emit(packetReceivedFromLowerSignal, msg);
 
         // check for bit errors
         if (PK(msg)->hasBitError())
         {
             EV << "Bit error in " << msg << endl;
-            emit(dropPkBitErrorSignal, msg);
+            //emit(dropPkBitErrorSignal, msg);
             numBitErr++;
             delete msg;
         }
@@ -337,10 +337,10 @@ void PPP::handleMessage(cMessage *msg)
         {
             // pass up payload
             PPPFrame *pppFrame = check_and_cast<PPPFrame *>(msg);
-            emit(rxPkOkSignal, pppFrame);
+            //emit(rxPkOkSignal, pppFrame);
             cPacket *payload = decapsulate(pppFrame);
             numRcvdOK++;
-            emit(packetSentToUpperSignal, payload);
+            //emit(packetSentToUpperSignal, payload);
             send(payload, "netwOut");
         }
     }
@@ -350,7 +350,7 @@ void PPP::handleMessage(cMessage *msg)
         {
             EV << "Interface is not connected, dropping packet " << msg << endl;
             numDroppedIfaceDown++;
-            emit(dropPkIfaceDownSignal, msg);
+            //emit(dropPkIfaceDownSignal, msg);
             delete msg;
 
             if (queueModule && 0 == queueModule->getNumPendingRequests())
@@ -358,7 +358,7 @@ void PPP::handleMessage(cMessage *msg)
         }
         else
         {
-            emit(packetReceivedFromUpperSignal, msg);
+            //emit(packetReceivedFromUpperSignal, msg);
 
             if (endTransmissionEvent->isScheduled())
             {
@@ -467,7 +467,7 @@ void PPP::flushQueue()
     {
         while (!queueModule->isEmpty()) {
             cMessage *msg = queueModule->pop();
-            emit(dropPkIfaceDownSignal, msg);  //FIXME this signal lumps together packets from the network and packets from higher layers! separate them
+            //emit(dropPkIfaceDownSignal, msg);  //FIXME this signal lumps together packets from the network and packets from higher layers! separate them
             delete msg;
         }
         queueModule->clear(); // clear request count
@@ -477,7 +477,7 @@ void PPP::flushQueue()
     {
         while (!txQueue.empty()) {
             cMessage *msg = (cMessage *)txQueue.pop();
-            emit(dropPkIfaceDownSignal, msg);  //FIXME this signal lumps together packets from the network and packets from higher layers! separate them
+            //emit(dropPkIfaceDownSignal, msg);  //FIXME this signal lumps together packets from the network and packets from higher layers! separate them
             delete msg;
         }
     }
