@@ -48,7 +48,7 @@ void OrdinalBasedDropper::initialize()
 void OrdinalBasedDropper::handleMessage(cMessage *msg)
 {
     numPackets++;
-    emit(rcvdPkSignal, msg);
+    //emit(rcvdPkSignal, msg);
 
     if (generateFurtherDrops)
     {
@@ -67,7 +67,7 @@ void OrdinalBasedDropper::handleMessage(cMessage *msg)
             return; // drop message
         }
     }
-    emit(sentPkSignal, msg);
+    //emit(sentPkSignal, msg);
     send(msg, "out");
 }
 

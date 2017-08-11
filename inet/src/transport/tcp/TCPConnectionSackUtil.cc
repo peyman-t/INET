@@ -415,8 +415,8 @@ void TCPConnection::sendSegmentDuringLossRecoveryPhase(uint32 seqNum)
     if (seqGreater(sentSeqNum, state->snd_max)) // HighData = snd_max
         state->snd_max = sentSeqNum;
 
-    if (unackedVector)
-        unackedVector->record(state->snd_max - state->snd_una);
+    //if (unackedVector)
+        //unackedVector->record(state->snd_max - state->snd_una);
 
     // RFC 3517, page 9: "6   Managing the RTO Timer
     //

@@ -49,7 +49,7 @@ void OrdinalBasedDuplicator::handleMessage(cMessage *msg)
 {
     numPackets++;
 
-    emit(rcvdPkSignal, msg);
+    //emit(rcvdPkSignal, msg);
 
     if (generateFurtherDuplicates)
     {
@@ -69,7 +69,7 @@ void OrdinalBasedDuplicator::handleMessage(cMessage *msg)
             }
         }
     }
-    emit(sentPkSignal, msg);
+    //emit(sentPkSignal, msg);
     send(msg, "out");
 }
 

@@ -1340,8 +1340,8 @@ bool TCPConnection::processAckInEstabEtc(TCPSegment *tcpseg)
         uint32 old_snd_una = state->snd_una;
         state->snd_una = tcpseg->getAckNo();
 
-        if (unackedVector)
-            unackedVector->record(state->snd_max - state->snd_una);
+        //if (unackedVector)
+            //unackedVector->record(state->snd_max - state->snd_una);
 
         // after retransmitting a lost segment, we may get an ack well ahead of snd_nxt
         if (seqLess(state->snd_nxt, state->snd_una))

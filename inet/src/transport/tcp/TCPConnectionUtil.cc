@@ -866,8 +866,8 @@ bool TCPConnection::sendData(bool fullSegmentsOnly, uint32 congestionWindow)
     if (seqGreater(state->snd_nxt, state->snd_max))
         state->snd_max = state->snd_nxt;
 
-    if (unackedVector)
-        unackedVector->record(state->snd_max - state->snd_una);
+    //if (unackedVector)
+        //unackedVector->record(state->snd_max - state->snd_una);
 
     // notify (once is enough)
     tcpAlgorithm->ackSent();
@@ -906,8 +906,8 @@ bool TCPConnection::sendProbe()
     // something we really sent)
     state->snd_max = state->snd_nxt;
 
-    if (unackedVector)
-        unackedVector->record(state->snd_max - state->snd_una);
+    //if (unackedVector)
+        //unackedVector->record(state->snd_max - state->snd_una);
 
     // notify
     tcpAlgorithm->ackSent();
@@ -937,8 +937,8 @@ void TCPConnection::retransmitOneSegment(bool called_at_rto)
         tcpAlgorithm->segmentRetransmitted(state->snd_nxt, state->snd_nxt+1);
         state->snd_max = ++state->snd_nxt;
 
-        if (unackedVector)
-            unackedVector->record(state->snd_max - state->snd_una);
+        //if (unackedVector)
+            //unackedVector->record(state->snd_max - state->snd_una);
     }
     else
     {
@@ -983,8 +983,8 @@ void TCPConnection::retransmitData()
         sendFin();
         state->snd_max = ++state->snd_nxt;
 
-        if (unackedVector)
-            unackedVector->record(state->snd_max - state->snd_una);
+        //if (unackedVector)
+            //unackedVector->record(state->snd_max - state->snd_una);
         return;
     }
 
@@ -1465,8 +1465,8 @@ void TCPConnection::updateRcvQueueVars()
     state->usedRcvBuffer = state->maxRcvBuffer - state->freeRcvBuffer;
 
     // update receive queue related statistics
-    if (tcpRcvQueueBytesVector)
-        tcpRcvQueueBytesVector->record(state->usedRcvBuffer);
+    //if (tcpRcvQueueBytesVector)
+        //tcpRcvQueueBytesVector->record(state->usedRcvBuffer);
 
 //    tcpEV << "receiveQ: receiveQLength=" << receiveQueue->getQueueLength() << " maxRcvBuffer=" << state->maxRcvBuffer << " usedRcvBuffer=" << state->usedRcvBuffer << " freeRcvBuffer=" << state->freeRcvBuffer << "\n";
 }
@@ -1619,8 +1619,8 @@ void TCPConnection::sendOneNewSegment(bool fullSegmentsOnly, uint32 congestionWi
                     if (seqGreater(state->snd_nxt, state->snd_max))
                         state->snd_max = state->snd_nxt;
 
-                    if (unackedVector)
-                        unackedVector->record(state->snd_max - state->snd_una);
+                    //if (unackedVector)
+                        //unackedVector->record(state->snd_max - state->snd_una);
 
                     // reset snd_nxt if needed
                     if (state->afterRto)

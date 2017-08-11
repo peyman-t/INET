@@ -57,6 +57,8 @@ simple REDDropperNUM
         string pkrates = default("150");  // average packet rate for calculations when queue is empty
         string marks = default("0");  // average packet rate for calculations when queue is empty
         @display("i=block/downarrow");
+        @signal[markingProb](type=double);
+        @statistic[marked](title="marking Prob"; source="markingProb"; record=mean; interpolationmode=none);
 
     gates:
         input in[numGates];

@@ -234,8 +234,8 @@ void TCPConnection::process_CLOSE(TCPEventCode& event, TCPCommand *tcpCommand, c
                 tcpAlgorithm->restartRexmitTimer();
                 state->snd_max = ++state->snd_nxt;
 
-                if (unackedVector)
-                    unackedVector->record(state->snd_max - state->snd_una);
+                //if (unackedVector)
+                    //unackedVector->record(state->snd_max - state->snd_una);
 
                 // state transition will automatically take us to FIN_WAIT_1 (or LAST_ACK)
             }
