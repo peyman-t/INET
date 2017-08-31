@@ -115,9 +115,11 @@ void ECNNUMP::processRateUpdateTimer(TCPEventCode& event)
 
     simtime_t now1 = simTime();
 
+//    if(state->dctcp_marked != state->dctcp_total)
     state->ecnnum_fraction = state->dctcp_marked / state->dctcp_total;
+
     if(state->ecnnum_fraction == 1)
-        state->ecnnum_fraction = 0.99;
+        state->ecnnum_fraction = 0.9;
 
     if (loadVector)
         loadVector->record(state->dctcp_marked / state->dctcp_total);
