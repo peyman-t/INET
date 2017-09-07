@@ -107,7 +107,7 @@ void ECNNUMP::processRateUpdateTimer(TCPEventCode& event)
             state->ecnnum_phi = d;
 
         state->ecnnum_Rate = (state->snd_cwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
-        if (rateVector && simTime() >= 0)
+        if (rateVector && simTime() >= conn->tcpMain->par("param3"))
             rateVector->record(state->ecnnum_Rate);
 
         state->ecnnum_cntr++;
@@ -117,6 +117,7 @@ void ECNNUMP::processRateUpdateTimer(TCPEventCode& event)
 
 //    if(state->dctcp_marked != state->dctcp_total)
     state->ecnnum_fraction = state->dctcp_marked / state->dctcp_total;
+    //state->ecnnum_fraction = state->ecnnum_alpha / 20 * state->dctcp_marked / state->dctcp_total + (1 - state->ecnnum_alpha / 20) * state->ecnnum_fraction;
 
     if(state->ecnnum_fraction == 1)
         state->ecnnum_fraction = 0.9;
@@ -185,7 +186,7 @@ void ECNNUMP::processRateUpdateTimer(TCPEventCode& event)
 
     if (cwndVector)
         cwndVector->record(state->snd_cwnd);
-    if (rateVector && simTime() >= 0)
+    if (rateVector && simTime() >= conn->tcpMain->par("param3"))
         rateVector->record(state->ecnnum_Rate);
 
     state->ecnnum_lastCalcTime = now1;
