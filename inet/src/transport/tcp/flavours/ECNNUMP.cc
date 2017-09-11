@@ -147,7 +147,7 @@ void ECNNUMP::processRateUpdateTimer(TCPEventCode& event)
     {
         double q = ( -std::log(1-state->ecnnum_fraction)  / std::log(state->ecnnum_phi)); //
 //        double newRate = state->ecnnum_Rate + state->ecnnum_alpha * state->ecnnum_Rate * (1 / state->ecnnum_Rate - q );
-        double newRate = state->ecnnum_Rate + state->ecnnum_alpha * (1 / state->ecnnum_Rate - q );
+        double newRate = state->ecnnum_Rate + state->ecnnum_alpha * state->ecnnum_Rate / 20 * (1 / state->ecnnum_Rate - q );
         if(newRate > 2 * state->ecnnum_Rate)
             state->ecnnum_Rate *= 2;
         else
