@@ -56,6 +56,7 @@ simple REDDropperNUM
         string maxps = default("0.02");  // maximum value for pbs (one number for each gate, last one repeated if needed)
         string pkrates = default("150");  // average packet rate for calculations when queue is empty
         string marks = default("0");  // average packet rate for calculations when queue is empty
+        double recStart = default(0);
         @display("i=block/downarrow");
         @signal[markingProb](type=double);
         @statistic[marked](title="marking Prob"; source="markingProb"; record=mean; interpolationmode=none);

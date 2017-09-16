@@ -116,15 +116,15 @@ void ECNNUMP::processRateUpdateTimer(TCPEventCode& event)
     simtime_t now1 = simTime();
 
 //    if(state->dctcp_marked != state->dctcp_total)
-    state->ecnnum_fraction = state->dctcp_marked / state->dctcp_total;
-    //state->ecnnum_fraction = state->ecnnum_alpha / 20 * state->dctcp_marked / state->dctcp_total + (1 - state->ecnnum_alpha / 20) * state->ecnnum_fraction;
+    //state->ecnnum_fraction = state->dctcp_marked / state->dctcp_total;
+    state->ecnnum_fraction = 0.02 * state->dctcp_marked / state->dctcp_total + (1 - 0.02) * state->ecnnum_fraction;
 
     if(state->ecnnum_fraction == 1)
         state->ecnnum_fraction = 0.9;
 
-    if (loadVector)
+    if (loadVector && simTime() >= conn->tcpMain->par("param3"))
         loadVector->record(state->dctcp_marked / state->dctcp_total);
-    if (calcLoadVector)
+    if (calcLoadVector && simTime() >= conn->tcpMain->par("param3"))
         calcLoadVector->record(state->ecnnum_fraction);
 
 //    if(newCwnd * 8 / (double)state->minrtt.dbl() > state->ecnnum_maxRate) {
@@ -245,9 +245,12 @@ void ECNNUMP::receivedDataAck(uint32 firstSeqAcked)
         state->dctcp_total++;
         if(state->ece) {
             state->dctcp_marked++;
-            markingProb->record(1);
-        } else
-            markingProb->record(0);
+            if(simTime() >= conn->tcpMain->par("param3"))
+                markingProb->record(1);
+        } else {
+            if(simTime() >= conn->tcpMain->par("param3"))
+                markingProb->record(0);
+        }
 
         if(state->ecnnum_pacing) {
             if(!state->lgcc_sch_rate) {

@@ -38,6 +38,7 @@ class REDDropperNUM : public AlgorithmicDropperBase
     double *pkrates;
     double *count;
     double *marks;
+    double recStart;
 
     double avg;
     simtime_t q_time;

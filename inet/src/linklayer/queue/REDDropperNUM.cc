@@ -96,6 +96,8 @@ void REDDropperNUM::initialize()
     markingProbSignal = registerSignal("markingProb");
 
     markNext = false;
+
+    recStart = par("recStart");
 }
 
 void REDDropperNUM::markECN(cPacket *packet)
@@ -160,11 +162,13 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
             else
                 markECN(packet);
             //marked->record(1);
-            emit(markingProbSignal, 1);
+            if(simTime() >= recStart)
+                emit(markingProbSignal, 1);
             //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
         } else {
             //marked->record(0);
-            emit(markingProbSignal, 0);
+            if(simTime() >= recStart)
+                emit(markingProbSignal, 0);
             //markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
         }
     }
@@ -177,7 +181,8 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
         else
             markECN(packet);
         //marked->record(1);
-        emit(markingProbSignal, 1);
+        if(simTime() >= recStart)
+            emit(markingProbSignal, 1);
         //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
     else if (queueLength >= maxth)  // maxth is also the "hard" limit
@@ -189,14 +194,16 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
         else
             markECN(packet);
         //marked->record(1);
-        emit(markingProbSignal, 1);
+        if(simTime() >= recStart)
+            emit(markingProbSignal, 1);
         //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
     else
     {
         count[i] = -1;
         //marked->record(0);
-        emit(markingProbSignal, 0);
+        if(simTime() >= recStart)
+            emit(markingProbSignal, 0);
         //markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
     }
 
