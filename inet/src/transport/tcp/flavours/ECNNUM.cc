@@ -107,7 +107,7 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
             state->ecnnum_phi = d;
 
         state->ecnnum_Rate = (state->snd_cwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
-        if (rateVector && simTime() >= 0)
+        if (rateVector && simTime() >= conn->tcpMain->par("param3"))
             rateVector->record(state->ecnnum_Rate);
 
         state->ecnnum_cntr++;
@@ -180,7 +180,7 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
 
     if (cwndVector)
         cwndVector->record(state->snd_cwnd);
-    if (rateVector && simTime() >= 0)
+    if (rateVector && simTime() >= conn->tcpMain->par("param3"))
         rateVector->record(state->ecnnum_Rate);
 
     state->ecnnum_lastCalcTime = now1;
