@@ -144,12 +144,12 @@ bool REDDropperNUMDual::shouldDrop(cPacket *packet)
         // TD: This following calculation is only useful when the queue is not empty!
         avg = (1 - wq) * avg + wq * queueLength;
     }
-    else
-    {
-        // TD: Added behaviour for empty queue.
-        const double m = SIMTIME_DBL(simTime() - q_time) * pkrate;
-        avg = pow(1 - wq, m) * avg;
-    }
+//    else
+//    {
+//        // TD: Added behaviour for empty queue.
+//        const double m = SIMTIME_DBL(simTime() - q_time) * pkrate;
+//        avg = pow(1 - wq, m) * avg;
+//    }
 
     double pb = 0;
 
@@ -170,8 +170,8 @@ bool REDDropperNUMDual::shouldDrop(cPacket *packet)
     p = p - alpha * pb * ( std::log(1 - p)  / std::log(phi) );
     if(p < 0.0001)
         p = 0.0001;
-    else if (p > 1)
-        p = 1;
+    else if (p >= 1)
+        p = 0.99;
 
     emit(avgMarkingProbSignal, p);
 
