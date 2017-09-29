@@ -58,12 +58,15 @@ simple REDDropperNUMDual
         string marks = default("0");  // average packet rate for calculations when queue is empty
         double recStart = default(0);
         double alpha = default(0.002);
+        double beta = default(0.5);
         double phi = default(10);
         @display("i=block/downarrow");
         @signal[markingProb](type=double);
         @statistic[marked](title="marking Prob"; source="markingProb"; record=mean; interpolationmode=none);
         @signal[avgMarkingProb](type=double);
         @statistic[avgMarked](title="avg marking Prob"; source="avgMarkingProb"; record=vector,mean; interpolationmode=none);
+        @signal[avgOutputRate](type=double);
+        @statistic[avgRate](title="avg output rate"; source="avgOutputRate"; record=vector,mean; interpolationmode=none);
 
     gates:
         input in[numGates];

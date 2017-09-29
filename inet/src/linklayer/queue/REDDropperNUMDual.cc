@@ -36,6 +36,7 @@ REDDropperNUMDual::~REDDropperNUMDual()
     delete[] count;
     delete[] marks;
     q_time = 0;
+    r_time = 0;
 
     delete marked;
     delete markedSID;
@@ -96,11 +97,13 @@ void REDDropperNUMDual::initialize()
 
     markingProbSignal = registerSignal("markingProb");
     avgMarkingProbSignal = registerSignal("avgMarkingProb");
+    avgOutputRateSignal = registerSignal("avgOutputRate");
 
     markNext = false;
 
     recStart = par("recStart");
     alpha = par("alpha");
+    beta = par("beta");
     phi = par("phi");
 }
 
@@ -143,52 +146,80 @@ bool REDDropperNUMDual::shouldDrop(cPacket *packet)
     {
         // TD: This following calculation is only useful when the queue is not empty!
         avg = (1 - wq) * avg + wq * queueLength;
+
+        curRate++;
     }
-//    else
-//    {
-//        // TD: Added behaviour for empty queue.
-//        const double m = SIMTIME_DBL(simTime() - q_time) * pkrate;
-//        avg = pow(1 - wq, m) * avg;
+    else
+    {
+        // TD: Added behaviour for empty queue.
+        const double m = SIMTIME_DBL(simTime() - q_time) * pkrate;
+        avg = pow(1 - wq, m) * avg;
+    }
+
+    double ct = SIMTIME_DBL(simTime());
+    if(ct >= SIMTIME_DBL(r_time) + 0.01) {
+        int d = SIMTIME_DBL(ct - r_time) * 100;
+        if(d >= 1) {
+            avgRate = (1 - alpha) * avgRate + alpha * curRate;
+            avgRate = pow(1 - alpha, d - 1) * avgRate;
+        }
+        r_time += (double)d / 100;
+        curRate = 0;
+
+        p = p - beta * (avgRate - pkrate / 100 * 0.8) * ( std::log(1 - p)  / std::log(phi) );
+
+        if(p < 0.0001)
+            p = 0.0001;
+        else if (p >= 0.99)
+            p = 0.99;
+
+        emit(avgMarkingProbSignal, p);
+        emit(avgOutputRateSignal, avgRate);
+    }
+
+//    double pb = 0;
+//
+//    if ((maxth - minth) / 2 <= avg && avg < maxth) {
+//        pb = (avg - (maxth - minth) / 2) / ((maxth - minth) / 2);
+//
+//    } else if (avg >= maxth) {
+//        pb = 1;
+//
+//    } else if ((maxth - minth) / 2 > avg && avg >= minth) {
+//        pb = - ((maxth - minth) / 2 - avg) / ((maxth - minth) / 2);
+//
+//    } else if (avg < minth) {
+//        pb = -1;
+//
 //    }
+//
+//    p = p - alpha * pb * ( std::log(1 - p)  / std::log(phi) );
+//    if(p < 0.0001)
+//        p = 0.0001;
+//    else if (p >= 1)
+//        p = 0.99;
 
-    double pb = 0;
-
-    if ((maxth - minth) / 2 <= avg && avg < maxth) {
-        pb = (avg - (maxth - minth) / 2) / ((maxth - minth) / 2);
-
-    } else if (avg >= maxth) {
-        pb = 1;
-
-    } else if ((maxth - minth) / 2 > avg && avg >= minth) {
-        pb = - ((maxth - minth) / 2 - avg) / ((maxth - minth) / 2);
-
-    } else if (avg < minth) {
-        pb = -1;
-
-    }
-
-    p = p - alpha * pb * ( std::log(1 - p)  / std::log(phi) );
-    if(p < 0.0001)
-        p = 0.0001;
-    else if (p >= 1)
-        p = 0.99;
-
-    emit(avgMarkingProbSignal, p);
-
-    if (dblrand() < p) {
-        if(!mark)
-            return true;
-        else
-            markECN(packet);
-        //marked->record(1);
+    if(avg >= maxth) {
+        markECN(packet);
         if(simTime() >= recStart)
             emit(markingProbSignal, 1);
-        //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+
     } else {
-        //marked->record(0);
-        if(simTime() >= recStart)
-            emit(markingProbSignal, 0);
-        //markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        if (dblrand() < p) {
+            if(!mark)
+                return true;
+            else
+                markECN(packet);
+            //marked->record(1);
+            if(simTime() >= recStart)
+                emit(markingProbSignal, 1);
+            //markedSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        } else {
+                //marked->record(0);
+                if(simTime() >= recStart)
+                    emit(markingProbSignal, 0);
+                //markedNotSID->record((check_and_cast<IPv4Datagram*>(packet))->getSrcAddress().getInt());
+        }
     }
 
     return false;

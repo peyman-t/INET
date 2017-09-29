@@ -40,12 +40,17 @@ class REDDropperNUMDual : public AlgorithmicDropperBase
     double *marks;
     double recStart;
     double alpha;
+    double beta;
     double phi;
 
     double p;
 
+    double curRate;
+    double avgRate;
+
     double avg;
     simtime_t q_time;
+    simtime_t r_time;
 
     cOutVector *marked;
     cOutVector *markedSID;
@@ -53,9 +58,10 @@ class REDDropperNUMDual : public AlgorithmicDropperBase
 
     simsignal_t markingProbSignal;
     simsignal_t avgMarkingProbSignal;
+    simsignal_t avgOutputRateSignal;
 
   public:
-    REDDropperNUMDual() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0), p(0.0001) {marked = markedSID = markedNotSID = NULL;}
+    REDDropperNUMDual() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0), p(0.0001), curRate(0.0), avgRate(0.0) {marked = markedSID = markedNotSID = NULL;}
 
     void markECN(cPacket *packet);
     bool isMarkedECN(cPacket *packet);

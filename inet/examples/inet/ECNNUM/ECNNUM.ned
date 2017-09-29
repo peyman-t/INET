@@ -1304,9 +1304,9 @@ network BitDown308
         routerCore.pppg++ <--> NormalP <--> client12.pppg++;
         routerCore2.pppg++ <--> NormalP <--> client23.pppg++;
         routerCore.pppg++ <--> NormalP <--> routerCore1.pppg++;
+        client22.pppg++ <--> NormalP <--> routerCore1.pppg++;
         routerCore1.pppg++ <--> NormalP <--> routerCore2.pppg++;
         routerCore2.pppg++ <--> NormalP <--> routerCore3.pppg++;
-        client22.pppg++ <--> NormalP <--> routerCore1.pppg++;
         client13.pppg++ <--> NormalP <--> routerCore1.pppg++;
         client14.pppg++ <--> NormalP <--> routerCore2.pppg++;
         routerCore3.pppg++ <--> NormalP <--> client24.pppg++;
