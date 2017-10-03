@@ -166,10 +166,10 @@ bool REDDropperNUMDual::shouldDrop(cPacket *packet)
         r_time += (double)d / 100;
         curRate = 0;
 
-        p = p - beta * (avgRate - pkrate / 100 * 0.8) * ( std::log(1 - p)  / std::log(phi) );
+        p = p - beta * (avgRate - pkrate / 100 * 0.6) * ( std::log(1 - p)  / std::log(phi) );
 
-        if(p < 0.0001)
-            p = 0.0001;
+        if(p < 0.01)
+            p = 0.01;
         else if (p >= 0.99)
             p = 0.99;
 
