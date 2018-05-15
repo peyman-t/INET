@@ -270,9 +270,12 @@ l1:
 
         if(state->ece) {
             state->dctcp_marked++;
-            markingProb->record(1);
-        } else
-            markingProb->record(0);
+            if (simTime() >= conn->tcpMain->par("param3"))
+                markingProb->record(1);
+        } else {
+            if (simTime() >= conn->tcpMain->par("param3"))
+                markingProb->record(0);
+        }
 
         simtime_t now = simTime();
         bool cut = false;
@@ -282,7 +285,16 @@ l1:
                                         //            if(now - state->dctcp_lastCalcTime >= state->srtt) {
 //            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_marked / state->dctcp_total);
             state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_bytesMarked / state->dctcp_bytesAcked);
-            if (calcLoadVector)
+
+            double d = conn->tcpMain->par("param2");
+            if(d > 0) {
+                state->dctcp_alpha = ( -std::log(1 - state->dctcp_alpha)  / std::log(d));
+
+                if(state->dctcp_alpha > 1)
+                    state->dctcp_alpha = 1;
+            }
+
+            if (calcLoadVector && simTime() >= conn->tcpMain->par("param3"))
                 calcLoadVector->record(state->dctcp_alpha);
 
             if(state->dctcp_marked && state->dctcp_CWR == false)
@@ -310,7 +322,7 @@ l1:
             uint32 flight_size = std::min(state->snd_cwnd, state->snd_wnd); // FIXME TODO - Does this formula computes the amount of outstanding data?
             state->ssthresh = std::max(3 * flight_size / 4, 2 * state->snd_mss);
 
-            if (cwndVector)
+            if (cwndVector && simTime() >= conn->tcpMain->par("param3"))
                 cwndVector->record(state->snd_cwnd);
         } else {
 
@@ -339,7 +351,7 @@ l1:
                 // int bytesAcked = state->snd_una - firstSeqAcked;
                 // state->snd_cwnd += bytesAcked * state->snd_mss;
 
-                if (cwndVector)
+                if (cwndVector && simTime() >= conn->tcpMain->par("param3"))
                     cwndVector->record(state->snd_cwnd);
 
                 tcpEV << "cwnd=" << state->snd_cwnd << "\n";
@@ -354,7 +366,7 @@ l1:
 
                 state->snd_cwnd += incr;
 
-                if (cwndVector)
+                if (cwndVector && simTime() >= conn->tcpMain->par("param3"))
                     cwndVector->record(state->snd_cwnd);
 
                 //
