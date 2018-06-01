@@ -284,15 +284,17 @@ l1:
             if(firstSeqAcked >= state->dctcp_windEnd) {
                                         //            if(now - state->dctcp_lastCalcTime >= state->srtt) {
 //            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_marked / state->dctcp_total);
-            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_bytesMarked / state->dctcp_bytesAcked);
+            double ratio = (state->dctcp_bytesMarked / state->dctcp_bytesAcked);
 
             double d = conn->tcpMain->par("param2");
             if(d > 0) {
-                state->dctcp_alpha = ( -std::log(1 - state->dctcp_alpha)  / std::log(d));
+                ratio = ( -std::log(1 - ratio)  / std::log(d));
 
-                if(state->dctcp_alpha > 1)
-                    state->dctcp_alpha = 1;
+                if(ratio > 1)
+                    ratio = 1;
             }
+
+            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * ratio;
 
             if (calcLoadVector && simTime() >= conn->tcpMain->par("param3"))
                 calcLoadVector->record(state->dctcp_alpha);

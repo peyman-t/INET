@@ -29,7 +29,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     dctcp_bytesAcked = 0;
     dctcp_bytesMarked = 0;
     dctcp_CWR = false;
-    dctcp_gamma = 0.16;
+    dctcp_gamma = 0.05;
     dctcp_lastCalcTime = 0;
     dctcp_marked = 0;
     dctcp_total = 0;
