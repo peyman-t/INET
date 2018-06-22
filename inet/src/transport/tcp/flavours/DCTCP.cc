@@ -286,6 +286,9 @@ l1:
 //            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_marked / state->dctcp_total);
             double ratio = (state->dctcp_bytesMarked / state->dctcp_bytesAcked);
 
+            if (loadVector && simTime() >= conn->tcpMain->par("param3"))
+                    loadVector->record(ratio);
+
             double d = conn->tcpMain->par("param2");
             if(d > 0) {
                 ratio = ( -std::log(1 - ratio)  / std::log(d));

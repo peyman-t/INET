@@ -75,7 +75,7 @@ void ECNNUM::processRexmitTimer(TCPEventCode& event)
     recalculateSlowStartThreshold();
     state->snd_cwnd = state->snd_mss;
 
-    if (cwndVector)
+    if (cwndVector && simTime() >= conn->tcpMain->par("param3"))
         cwndVector->record(state->snd_cwnd);
 
     tcpEV << "Begin Slow Start: resetting cwnd to " << state->snd_cwnd
@@ -178,7 +178,7 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
 
     state->snd_cwnd = newCwnd;
 
-    if (cwndVector)
+    if (cwndVector && simTime() >= conn->tcpMain->par("param3"))
         cwndVector->record(state->snd_cwnd);
     if (rateVector && simTime() >= conn->tcpMain->par("param3"))
         rateVector->record(state->ecnnum_Rate);
@@ -230,7 +230,7 @@ void ECNNUM::receivedDataAck(uint32 firstSeqAcked)
         tcpEV << "Fast Recovery: setting cwnd to ssthresh=" << state->ssthresh << "\n";
         state->snd_cwnd = state->ssthresh;
 
-        if (cwndVector)
+        if (cwndVector && simTime() >= conn->tcpMain->par("param3"))
             cwndVector->record(state->snd_cwnd);
     }
     else

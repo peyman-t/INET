@@ -38,7 +38,7 @@ cMessage *FIFOQueue::enqueue(cMessage *msg)
     cPacket *packet = check_and_cast<cPacket*>(msg);
     queue.insert(packet);
     byteLength += packet->getByteLength();
-    if (simTime() >= 0)
+    if (simTime() >= 5)
     emit(queueLengthSignal, queue.length());
     return NULL;
 }
@@ -50,7 +50,7 @@ cMessage *FIFOQueue::dequeue()
 
     cPacket *packet = check_and_cast<cPacket*>(queue.pop());
     byteLength -= packet->getByteLength();
-    if (simTime() >= 0)
+    if (simTime() >= 5)
     emit(queueLengthSignal, queue.length());
     return packet;
 }
