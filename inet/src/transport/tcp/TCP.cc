@@ -44,6 +44,8 @@
 #include "TCPVirtualDataRcvQueue.h"
 #include "TCPVirtualDataSendQueue.h"
 
+#include <TCPRelayApp.h>
+#include <TCP2.h>
 
 Define_Module(TCP);
 
@@ -182,6 +184,10 @@ void TCP::handleMessage(cMessage *msg)
                 error("(%s)%s arrived without control info", tcpseg->getClassName(), tcpseg->getName());
             }
 
+            // Peyman -- pushback
+//            cGate *gateToTcp2 = gate("TCP2");
+//            check_and_cast<cSimpleModule *>(gateToTcp2->getOwnerModule())->send(msg, gateToTcp2);
+
             // process segment
             TCPConnection *conn = findConnForSegment(tcpseg, srcAddr, destAddr);
             if (conn)
@@ -190,6 +196,18 @@ void TCP::handleMessage(cMessage *msg)
                 bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                 if (!ret)
                     removeConnection(conn);
+
+                opp_string str("^.relay[");
+                char buf[10];
+                sprintf(buf, "%d", conn->appGateIndex);
+                str = str + buf;
+                str = str + "]";
+                TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
+                if(relay != NULL) {
+                    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+                    TCPConnection *conn1 = tcp2->findConnForApp(0, relay->getSendTCPSocket()->getConnectionId());
+                    tcpEV << conn1->getReceiveQueue()->getAmountOfBufferedBytes();
+                }
             }
             else
             {

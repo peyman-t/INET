@@ -26,12 +26,6 @@
  * arrives on them.
  */
 
-char * inGateName = "tcpIn";
-char * inGate2Name = "tcp2In";
-
-char * outGateName = "tcpOut";
-char * outGate2Name = "tcp2Out";
-
 class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCPSocket::CallbackInterface
 {
   protected:
@@ -49,6 +43,12 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
 
     bool reverse;
 
+    char * inGateName = "tcpIn";
+    char * inGate2Name = "tcp2In";
+
+    char * outGateName = "tcpOut";
+    char * outGate2Name = "tcp2Out";
+
     char *inGate, *outGate, *inGate2, *outGate2;
 
     static simsignal_t rcvdPkSignal;
@@ -56,6 +56,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
 
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
+    TCPSocket* getSendTCPSocket();
 
   protected:
     virtual bool isNodeUp();

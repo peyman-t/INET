@@ -155,6 +155,12 @@ void TCPRelayApp::sendDown(cMessage *msg)
 
 }
 
+
+TCPSocket* TCPRelayApp::getSendTCPSocket() {
+    return &ssocket;
+}
+
+
 void TCPRelayApp::handleMessage(cMessage *msg)
 {
     if (!isNodeUp())

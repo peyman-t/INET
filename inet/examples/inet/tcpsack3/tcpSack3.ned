@@ -136,6 +136,72 @@ network tcpValidation
         routerEg.pppg++ <--> NormalP {  delay = ldelay; } <--> client4.pppg++;
 }
 
+network tcpValidationTest
+{
+    parameters:
+        @display("bgb=637,253");
+        double ldelay @unit(s) = default(0.01s);
+    types:
+        channel SlowP extends DatarateChannel
+        {
+            parameters:
+                datarate = 20Mbps;
+                per = 0;
+                ber = 0;
+        }
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                datarate = 100Mbps;
+                per = 0;
+                ber = 0;
+        }
+        channel HighSpeedP extends DatarateChannel
+        {
+            parameters:
+                datarate = 20Mbps;
+                per = 0;
+                ber = 0;
+        }
+
+    submodules:
+        routerIng: SplitTCPRouter {
+            parameters:
+                @display("p=309,145;i=abstract/router");
+        }
+        client1: StandardHost2 {
+            parameters:
+                @display("p=50,100");
+        }
+        configurator: IPv4NetworkConfigurator;
+        client2: StandardHost2 {
+            parameters:
+                @display("p=50,200");
+        }
+        client3: StandardHost2 {
+            parameters:
+                @display("p=581,100");
+        }
+        client4: StandardHost2 {
+            @display("p=581,200");
+        }
+    connections:
+//        routerIng.pppg++ <--> NormalP{delay = 1ms;} <--> client1.pppg++;
+//        routerIng.pppg++ <--> NormalP{delay = 1ms;} <--> client2.pppg++;
+//        
+//        routerIng.pppg++ <--> HighSpeedP{delay = 1ms;} <--> routerCore.pppg++;
+//        routerCore.pppg++ <--> HighSpeedP{delay = 1ms;} <--> routerEg.pppg++;
+//
+//        routerEg.pppg++ <--> SlowP{delay = ldelay;} <--> client3.pppg++;
+//        routerEg.pppg++ <--> NormalP{delay = ldelay;} <--> client4.pppg++;
+
+        routerIng.pppg++ <--> NormalP {  delay = ldelay; } <--> client1.pppg++;
+        routerIng.pppg++ <--> NormalP {  delay = ldelay; } <--> client2.pppg++;
+
+        routerIng.pppg++ <--> SlowP {  delay = ldelay; } <--> client3.pppg++;
+        routerIng.pppg++ <--> SlowP {  delay = ldelay; } <--> client4.pppg++;
+}
+
 network dumbbellAgg
 {
     parameters:
