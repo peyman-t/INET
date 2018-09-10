@@ -21,8 +21,10 @@
 #include "NodeOperations.h"
 #include "IPvXAddress.h"
 #include "IPvXAddressResolver.h"
+#include "TCP.h"
 #include "TCP2.h"
 #include "TCPConnection.h"
+#include "TCPSendQueue.h"
 
 Define_Module(TCPRelayApp);
 
@@ -53,6 +55,7 @@ void TCPRelayApp::initialize(int stage)
         }
 
         bytesRcvd = bytesSent = 0;
+        sendQueueSize = 0;
         WATCH(bytesRcvd);
         WATCH(bytesSent);
 
@@ -155,6 +158,10 @@ void TCPRelayApp::sendDown(cMessage *msg)
 
 }
 
+long TCPRelayApp::getSendQueueSize() {
+    return sendQueueSize;
+}
+
 
 TCPSocket* TCPRelayApp::getSendTCPSocket() {
     return &ssocket;
@@ -174,8 +181,10 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         // we'll close too
 //        msg->setName("close");
 //        msg->setKind(TCP_C_CLOSE);
+        std::string agate = msg->getArrivalGate()->getName();
+        if(agate == outGate)
+            ssocket.close();
         delete msg;
-        ssocket.close();
 
     }
     else if (msg->getKind() == TCP_I_DATA || msg->getKind() == TCP_I_URGENT_DATA)
@@ -224,6 +233,17 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         // some indication -- ignore
         delete msg;
     }
+
+    TCP2 *tcp = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp"));
+    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+    TCPConnection *conn1 = NULL;
+    if(!reverse)
+        conn1 = tcp2->findConnForApp(0, getSendTCPSocket()->getConnectionId());
+    else
+        conn1 = tcp->findConnForApp(0, getSendTCPSocket()->getConnectionId());
+
+    if(conn1 != NULL)
+        sendQueueSize = (long)(conn1->getSendQueue()->getBytesAvailable(0));
 
     if (ev.isGUI())
     {

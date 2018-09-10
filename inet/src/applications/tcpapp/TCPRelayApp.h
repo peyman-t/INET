@@ -41,6 +41,8 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     long bytesRcvd;
     long bytesSent;
 
+    long sendQueueSize;
+
     bool reverse;
 
     char * inGateName = "tcpIn";
@@ -57,6 +59,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
     TCPSocket* getSendTCPSocket();
+    long getSendQueueSize();
 
   protected:
     virtual bool isNodeUp();

@@ -148,6 +148,8 @@ class INET_API TCP : public cSimpleModule, public ILifecycle
     ushort lastEphemeralPort;
     std::multiset<ushort> usedEphemeralPorts;
 
+    cOutVector *maxRecvWindowVector;
+
   protected:
     /** Factory method; may be overriden for customizing TCP */
     virtual TCPConnection *createConnection(int appGateIndex, int connId);
