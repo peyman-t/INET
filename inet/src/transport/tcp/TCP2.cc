@@ -41,6 +41,8 @@
 #include "TCPVirtualDataRcvQueue.h"
 #include "TCPVirtualDataSendQueue.h"
 
+#include <TCPRelayApp.h>
+#include <TCP.h>
 
 Define_Module(TCP2);
 
@@ -98,6 +100,9 @@ void TCP2::initialize(int stage)
         cModule *netw = simulation.getSystemModule();
         testing = netw->hasPar("testing") && netw->par("testing").boolValue();
         logverbose = !testing && netw->hasPar("logverbose") && netw->par("logverbose").boolValue();
+
+        maxRecvWindowVector = new cOutVector("maxRcvBuffer");
+
     }
     else if (stage == 1)
     {
@@ -112,6 +117,8 @@ void TCP2::initialize(int stage)
 
 TCP2::~TCP2()
 {
+    delete maxRecvWindowVector;
+
     while (!tcpAppConnMap.empty())
     {
         TcpAppConnMap::iterator i = tcpAppConnMap.begin();
@@ -181,9 +188,48 @@ void TCP2::handleMessage(cMessage *msg)
             TCPConnection *conn = findConnForSegment(tcpseg, srcAddr, destAddr);
             if (conn)
             {
-                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
-                if (!ret)
-                    removeConnection(conn);
+                conn->getState()->ecn = tcpseg->getEcnBit();
+
+                // Peyman -- original code
+//                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+//                if (!ret)
+//                    removeConnection(conn);
+
+                // Peyman -- pushback
+                opp_string str("^.relay[");
+                char buf[10];
+                sprintf(buf, "%d", conn->appGateIndex);
+                str = str + buf;
+                str = str + "]";
+                TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
+                if(relay != NULL) {
+                    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp"));
+                    TCPConnection *conn1 = tcp2->findConnForApp(0, relay->getSendTCPSocket()->getConnectionId());
+                    tcpEV << conn1->getSendQueue()->getBytesAvailable(0);
+                    tcpEV << conn->getState()->maxRcvBuffer;
+                    maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
+                    if(conn1->getSendQueue()->getBytesAvailable(0) > 10000) {
+//                        conn->getState()->maxRcvBuffer = 100000;
+                        if (dblrand() < 0.01)
+                            delete tcpseg;
+                        else {
+                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+                            if (!ret)
+                                removeConnection(conn);
+                        }
+                    } else {
+//                        conn->getState()->maxRcvBuffer = 100000;
+                        bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+                        if (!ret)
+                            removeConnection(conn);
+                    }
+                } else {
+                    bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+                    if (!ret)
+                        removeConnection(conn);
+
+                }
+                // Peyman -- pushback -- up to here
             }
             else
             {
