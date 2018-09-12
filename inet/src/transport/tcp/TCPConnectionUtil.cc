@@ -1486,8 +1486,8 @@ unsigned short TCPConnection::updateRcvWnd()
 
     // Do not shrink window
     // (rcv_adv minus rcv_nxt) is the amount of space still available to the sender that was previously advertised
-    if (win < state->rcv_adv - state->rcv_nxt)
-        win = state->rcv_adv - state->rcv_nxt;
+//    if (win < state->rcv_adv - state->rcv_nxt)
+//        win = state->rcv_adv - state->rcv_nxt;
 
     // Observe upper limit for advertised window on this connection
     if (win > TCP_MAX_WIN && !state->ws_enabled) // TCP_MAX_WIN = 65535 (16 bit)

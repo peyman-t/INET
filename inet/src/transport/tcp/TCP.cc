@@ -211,20 +211,27 @@ void TCP::handleMessage(cMessage *msg)
                 if(relay != NULL) {
                     TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
                     TCPConnection *conn1 = tcp2->findConnForApp(0, relay->getSendTCPSocket()->getConnectionId());
-                    tcpEV << conn1->getSendQueue()->getBytesAvailable(0);
-                    tcpEV << conn->getState()->maxRcvBuffer;
-                    maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
-                    if(conn1->getSendQueue()->getBytesAvailable(0) > 10000) {
-//                        conn->getState()->maxRcvBuffer = 100000;
-                        if (dblrand() < 0.01)
-                            delete tcpseg;
-                        else {
+                    if(conn1 != NULL) {
+                        tcpEV << conn1->getSendQueue()->getBytesAvailable(0);
+                        tcpEV << conn->getState()->maxRcvBuffer;
+                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
+                        if(conn1->getSendQueue()->getBytesAvailable(0) > 10000) {
+                            conn->getState()->maxRcvBuffer = 1500;
+                            if (dblrand() < 0.00)
+                                delete tcpseg;
+                            else {
+                                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+                                if (!ret)
+                                    removeConnection(conn);
+                            }
+                        } else {
+                            conn->getState()->maxRcvBuffer = 100000;
                             bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                             if (!ret)
                                 removeConnection(conn);
                         }
                     } else {
-//                        conn->getState()->maxRcvBuffer = 100000;
+                        conn->getState()->maxRcvBuffer = 100000;
                         bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                         if (!ret)
                             removeConnection(conn);
