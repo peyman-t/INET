@@ -96,7 +96,10 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     }
 
     if(state->lgcc_cntr == 0) {
-        state->lgcc_phyRate = conn->tcpMain->par("ldatarate");
+        if(conn->tcpMain != NULL)
+            state->lgcc_phyRate = conn->tcpMain->par("ldatarate");
+        else
+            state->lgcc_phyRate = conn->tcpMain2->par("ldatarate");
 //        state->minrtt = 0.000140;
         state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
     }

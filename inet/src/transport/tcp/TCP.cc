@@ -194,9 +194,10 @@ void TCP::handleMessage(cMessage *msg)
             TCPConnection *conn = findConnForSegment(tcpseg, srcAddr, destAddr);
             if (conn)
             {
-                conn->getState()->ecn = tcpseg->getEcnBit();
+
 
                 // Peyman -- original code
+//                conn->getState()->ecn = tcpseg->getEcnBit();
 //                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
 //                if (!ret)
 //                    removeConnection(conn);
@@ -216,27 +217,41 @@ void TCP::handleMessage(cMessage *msg)
                         tcpEV << conn->getState()->maxRcvBuffer;
                         maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
                         if(conn1->getSendQueue()->getBytesAvailable(0) > 10000) {
-                            conn->getState()->maxRcvBuffer = 1500;
+                            // pushback
+                            // conn->getState()->maxRcvBuffer = 1500;
+
+                            // ECN mark
+                            double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
+                            if(d > 1)
+                                d = 1;
+                            if(dblrand() < d)
+                                tcpseg->setEcnBit(true);
+
+                            // drop
                             if (dblrand() < 0.00)
                                 delete tcpseg;
                             else {
+                                conn->getState()->ecn = tcpseg->getEcnBit();
                                 bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                                 if (!ret)
                                     removeConnection(conn);
                             }
                         } else {
                             conn->getState()->maxRcvBuffer = 100000;
+                            conn->getState()->ecn = tcpseg->getEcnBit();
                             bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                             if (!ret)
                                 removeConnection(conn);
                         }
                     } else {
                         conn->getState()->maxRcvBuffer = 100000;
+                        conn->getState()->ecn = tcpseg->getEcnBit();
                         bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                         if (!ret)
                             removeConnection(conn);
                     }
                 } else {
+                    conn->getState()->ecn = tcpseg->getEcnBit();
                     bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                     if (!ret)
                         removeConnection(conn);

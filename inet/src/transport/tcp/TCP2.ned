@@ -216,7 +216,13 @@ simple TCP2 like ITCP
         string sendQueueClass = default("");    // Obsolete!!!
         string receiveQueueClass = default(""); // Obsolete!!!
         @display("i=block/wheelbarrow");
-    gates:
+        double ldatarate @unit(bps) = default(10Mbps);
+        double param1 = default(0.0); // ECNNUM=ecnnum_alpha,  
+        double param2 = default(0.0); // ECNNUM=ecnnum_phi,  
+        double param3 = default(0.0);
+        double param4 = default(0.0);
+    
+	gates:
         input appIn[] @labels(TCPCommand/down);
         input ipIn @labels(TCPSegment,IPv4ControlInfo/up);
         input ipv6In @labels(TCPSegment,IPv6ControlInfo/up);
