@@ -45,6 +45,7 @@
 #include "TCPVirtualDataSendQueue.h"
 
 #include <TCPRelayApp.h>
+#include <TCPBaseAlg.h>
 #include <TCP2.h>
 
 Define_Module(TCP);
@@ -213,19 +214,16 @@ void TCP::handleMessage(cMessage *msg)
                     TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
                     TCPConnection *conn1 = tcp2->findConnForApp(0, relay->getSendTCPSocket()->getConnectionId());
                     if(conn1 != NULL) {
-                        tcpEV << conn1->getSendQueue()->getBytesAvailable(0);
-                        tcpEV << conn->getState()->maxRcvBuffer;
-                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
-                        if(conn1->getSendQueue()->getBytesAvailable(0) > 10000) {
+                        if(conn1->getSendQueue()->getBytesAvailable(0) > 20000) {
                             // pushback
                             // conn->getState()->maxRcvBuffer = 1500;
 
                             // ECN mark
                             double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
-                            if(d > 1)
-                                d = 1;
                             if(dblrand() < d)
                                 tcpseg->setEcnBit(true);
+                            TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
+                            conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
 
                             // drop
                             if (dblrand() < 0.00)
@@ -243,6 +241,7 @@ void TCP::handleMessage(cMessage *msg)
                             if (!ret)
                                 removeConnection(conn);
                         }
+                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
                     } else {
                         conn->getState()->maxRcvBuffer = 100000;
                         conn->getState()->ecn = tcpseg->getEcnBit();

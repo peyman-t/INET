@@ -36,6 +36,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     dctcp_totalSent = 0;
 
     lgcc_phyRate = 10000000000;
+    lgcc_carryingCap = lgcc_phyRate;
 //    lgcc_maxWin = 240000; // 40Mbps : 240000;        10Mbps : 60000;
 //    lgcc_rate = 0.01;//2 / (lgcc_maxWin / 1500);
     lgcc_load = 0;

@@ -62,7 +62,7 @@ TCPBaseAlgStateVariables::TCPBaseAlgStateVariables()
     // Jacobson's alg: srtt must be initialized to 0, rttvar to a value which
     // will yield rto = 3s initially.
     srtt = 0;
-    minrtt = 100;
+    minrtt = 1;
     rttvar = 3.0 / 4.0;
 
     numRtos = 0;

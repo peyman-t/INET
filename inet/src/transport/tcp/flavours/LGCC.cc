@@ -101,8 +101,17 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
         else
             state->lgcc_phyRate = conn->tcpMain2->par("ldatarate");
 //        state->minrtt = 0.000140;
+
         state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
+        if (rateVector)
+            rateVector->record(state->lgcc_rate);
     }
+
+    if(state->snd_wnd * 4 * 8 < state->lgcc_phyRate)
+        state->lgcc_carryingCap = state->snd_wnd * 4 * 8;
+    else
+        state->lgcc_carryingCap = state->lgcc_phyRate;
+
 
     simtime_t now1 = simTime();
 
@@ -191,13 +200,15 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 //            state->lgcc_phyRate += 100000000;
 //        }
 
-    uint32 newCwnd = state->lgcc_rate * state->lgcc_phyRate * (double)state->minrtt.dbl() / 8;
+    // lgcc_phyRate -> lgcc_carryingCap
+    uint32 newCwnd = state->lgcc_rate * state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8;
     if(newCwnd < 2 * state->snd_mss) {
         if(newCwnd * 1.5 < 2 * state->snd_mss)
             newCwnd *= 1.5;
         else
             newCwnd = 2 * state->snd_mss;
-        state->lgcc_rate = newCwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
+        // lgcc_phyRate -> lgcc_carryingCap
+        state->lgcc_rate = newCwnd / (state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8);
     }
 
     uint32 rCwnd = newCwnd / state->snd_mss;
@@ -207,9 +218,11 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     state->snd_cwnd = newCwnd;
 
     if (carryingCapacity)
-        carryingCapacity->record(state->lgcc_phyRate);
+        carryingCapacity->record(state->lgcc_carryingCap);
     if (cwndVector)
         cwndVector->record(state->snd_cwnd);
+    if (rateVector)
+        rateVector->record(state->lgcc_rate);
     if (brVector)
         brVector->record(state->lgcc_r);
 
@@ -223,7 +236,10 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 
     if(state->lgcc_pacing) {
         double minRTT = (double)state->minrtt.dbl();
-        double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_phyRate);
+        // lgcc_phyRate -> lgcc_carryingCap
+        double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_carryingCap);
+        if(totalSpace <0)
+            totalSpace = 0.00001;
         state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
         if(!state->lgcc_sch) {
             conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
