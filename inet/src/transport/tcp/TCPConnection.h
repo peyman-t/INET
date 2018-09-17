@@ -268,6 +268,8 @@ class INET_API TCPStateVariables : public cObject
     uint32 freeRcvBuffer;    // current amount of free bytes in tcp receive queue
     uint32 tcpRcvQueueDrops; // number of drops in tcp receive queue
 
+    bool maxRcvBufferChanged;     // maximal amount of bytes in tcp receive queue changed
+
     bool ecn;
     bool ece;
 };
@@ -383,6 +385,10 @@ class INET_API TCPConnection
     cOutVector *sackedBytesVector;        // current number of received sacked bytes
     cOutVector *tcpRcvQueueBytesVector;   // current amount of used bytes in tcp receive queue
     cOutVector *tcpRcvQueueDropsVector;   // number of drops in tcp receive queue
+
+
+    cOutVector *wndScaleVector;   // number of drops in tcp receive queue
+    cOutVector *rcvWndScaleVector;   // number of drops in tcp receive queue
 
   protected:
     /** @name FSM transitions: analysing events and executing state transitions */

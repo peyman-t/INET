@@ -42,7 +42,9 @@
 #include "TCPVirtualDataSendQueue.h"
 
 #include <TCPRelayApp.h>
+#include <TCPBaseAlg.h>
 #include <TCP.h>
+#include "PPP.h"
 
 Define_Module(TCP2);
 
@@ -170,6 +172,7 @@ void TCP2::handleMessage(cMessage *msg)
                 IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->removeControlInfo();
                 srcAddr = controlInfo->getSrcAddr();
                 destAddr = controlInfo->getDestAddr();
+                tcpseg->setEcnBit(controlInfo->getExplicitCongestionNotification());
                 delete controlInfo;
             }
             else if (dynamic_cast<IPv6ControlInfo *>(tcpseg->getControlInfo()) != NULL)
@@ -177,6 +180,7 @@ void TCP2::handleMessage(cMessage *msg)
                 IPv6ControlInfo *controlInfo = (IPv6ControlInfo *)tcpseg->removeControlInfo();
                 srcAddr = controlInfo->getSrcAddr();
                 destAddr = controlInfo->getDestAddr();
+                tcpseg->setEcnBit(controlInfo->getExplicitCongestionNotification());
                 delete controlInfo;
             }
             else
@@ -203,33 +207,54 @@ void TCP2::handleMessage(cMessage *msg)
                 str = str + "]";
                 TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
                 if(relay != NULL) {
+                    // change link rate
+//                    PPP *ppp = dynamic_cast<PPP *>(getModuleByPath("^.ppp[2]"));
+//                    ppp->
+
                     TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
                     TCPConnection *conn1 = tcp->findConnForApp(0, relay->getSendTCPSocket()->getConnectionId());
                     if(conn1 != NULL) {
-                        tcpEV << conn1->getSendQueue()->getBytesAvailable(0);
-                        tcpEV << conn->getState()->maxRcvBuffer;
-                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
-                        if(conn1->getSendQueue()->getBytesAvailable(0) > 10000) {
-    //                        conn->getState()->maxRcvBuffer = 100000;
-                            if (dblrand() < 0.01)
+                        if(conn1->getSendQueue()->getBytesAvailable(0) > 20000) {
+                            // pushback
+                            // conn->getState()->maxRcvBuffer = 1500;
+
+                            // ECN mark
+                            double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
+                            if(dblrand() < d)
+                                tcpseg->setEcnBit(true);
+                            TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
+                            conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
+                            conn->getState()->maxRcvBufferChanged = true;
+
+
+                            // drop
+                            if (dblrand() < 0.00)
                                 delete tcpseg;
                             else {
+                                conn->getState()->ecn = tcpseg->getEcnBit();
                                 bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                                 if (!ret)
                                     removeConnection(conn);
                             }
                         } else {
-    //                        conn->getState()->maxRcvBuffer = 100000;
+                            conn->getState()->maxRcvBuffer = 10000000;
+                            conn->getState()->maxRcvBufferChanged = true;
+                            conn->getState()->ecn = tcpseg->getEcnBit();
                             bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                             if (!ret)
                                 removeConnection(conn);
                         }
+                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
                     } else {
+                        conn->getState()->maxRcvBuffer = 10000000;
+                        conn->getState()->maxRcvBufferChanged = true;
+                        conn->getState()->ecn = tcpseg->getEcnBit();
                         bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                         if (!ret)
                             removeConnection(conn);
                     }
                 } else {
+                    conn->getState()->ecn = tcpseg->getEcnBit();
                     bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                     if (!ret)
                         removeConnection(conn);

@@ -224,6 +224,8 @@ void TCP::handleMessage(cMessage *msg)
                                 tcpseg->setEcnBit(true);
                             TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
                             conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
+                            conn->getState()->maxRcvBufferChanged = true;
+
 
                             // drop
                             if (dblrand() < 0.00)
@@ -235,7 +237,8 @@ void TCP::handleMessage(cMessage *msg)
                                     removeConnection(conn);
                             }
                         } else {
-                            conn->getState()->maxRcvBuffer = 100000;
+                            conn->getState()->maxRcvBuffer = 10000000;
+                            conn->getState()->maxRcvBufferChanged = true;
                             conn->getState()->ecn = tcpseg->getEcnBit();
                             bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                             if (!ret)
@@ -243,7 +246,8 @@ void TCP::handleMessage(cMessage *msg)
                         }
                         maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
                     } else {
-                        conn->getState()->maxRcvBuffer = 100000;
+                        conn->getState()->maxRcvBuffer = 10000000;
+                        conn->getState()->maxRcvBufferChanged = true;
                         conn->getState()->ecn = tcpseg->getEcnBit();
                         bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                         if (!ret)

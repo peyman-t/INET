@@ -1116,7 +1116,7 @@ bool TCPConnection::processWSOption(TCPSegment *tcpseg, const TCPOption& option)
     if (fsm.getState() != TCP_S_LISTEN && fsm.getState() != TCP_S_SYN_SENT)
     {
         tcpEV << "ERROR: TCP Header Option WS received, but in unexpected state\n";
-        return false;
+//        return false;
     }
 
     if (option.getValuesArraySize() == 0)
@@ -1413,6 +1413,42 @@ TCPSegment TCPConnection::writeHeaderOptions(TCPSegment *tcpseg)
         // TODO delegate to TCPAlgorithm as well -- it may want to append additional options
     }
 
+    if(state->maxRcvBufferChanged) {
+        // WS header option
+        if (state->ws_support)
+        {
+            // 1 padding byte
+            option.setKind(TCPOPTION_NO_OPERATION); // NOP
+            option.setLength(1);
+            option.setValuesArraySize(0);
+            tcpseg->setOptionsArraySize(tcpseg->getOptionsArraySize() + 1);
+            tcpseg->setOptions(t++, option);
+
+            option.setKind(TCPOPTION_WINDOW_SCALE);
+            option.setLength(3);
+            option.setValuesArraySize(1);
+
+            // Update WS variables
+            //ulong scaled_rcv_wnd = receiveQueue->getAmountOfFreeBytes(state->maxRcvBuffer);
+            ulong scaled_rcv_wnd = receiveQueue->getFirstSeqNo() + state->maxRcvBuffer - state->rcv_nxt;
+            state->rcv_wnd_scale = 0;
+
+            while (scaled_rcv_wnd > TCP_MAX_WIN && state->rcv_wnd_scale < 14) // RFC 1323, page 11: "the shift count must be limited to 14"
+            {
+                scaled_rcv_wnd = scaled_rcv_wnd >> 1;
+                state->rcv_wnd_scale++;
+            }
+
+            option.setValues(0, state->rcv_wnd_scale); // rcv_wnd_scale is also set in scaleRcvWnd()
+            state->snd_ws = true;
+            state->ws_enabled = state->ws_support && state->snd_ws && state->rcv_ws;
+            tcpEV << "TCP Header Option WS(=" << option.getValues(0) << ") sent, WS (ws_enabled) is set to " << state->ws_enabled << "\n";
+            tcpseg->setOptionsArraySize(tcpseg->getOptionsArraySize() + 1);
+            tcpseg->setOptions(t++, option);
+        }
+        state->maxRcvBufferChanged = false;
+    }
+
     if (tcpseg->getOptionsArraySize() != 0)
     {
         uint options_len = tcpseg->getOptionsArrayLength();
@@ -1522,6 +1558,9 @@ unsigned short TCPConnection::updateRcvWnd()
         }
     }
 
+    if(rcvWndScaleVector)
+        rcvWndScaleVector->record(state->rcv_wnd_scale);
+
     ASSERT(scaled_rcv_wnd == (unsigned short)scaled_rcv_wnd);
 
     return (unsigned short) scaled_rcv_wnd;
@@ -1537,6 +1576,9 @@ void TCPConnection::updateWndInfo(TCPSegment *tcpseg, bool doAlways)
     //    SND.WND = SEG.WND << Snd.Wind.Scale"
     if (state->ws_enabled && !tcpseg->getSynBit())
         true_window = tcpseg->getWindow() << state->snd_wnd_scale;
+
+    if(wndScaleVector)
+        wndScaleVector->record(state->snd_wnd_scale);
 
     // Following lines are based on [Stevens, W.R.: TCP/IP Illustrated, Volume 2, page 982]:
     if (doAlways || (tcpseg->getAckBit()

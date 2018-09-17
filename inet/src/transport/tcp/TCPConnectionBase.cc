@@ -108,6 +108,7 @@ TCPStateVariables::TCPStateVariables()
     rcv_naseg = 0;
 
     maxRcvBuffer = 0;  // will be set from configureStateVariables()
+    maxRcvBufferChanged = false;
     usedRcvBuffer = 0;
     freeRcvBuffer = 0;
     tcpRcvQueueDrops = 0;
@@ -180,7 +181,7 @@ TCPConnection::TCPConnection()
     the2MSLTimer = connEstabTimer = finWait2Timer = synRexmitTimer = NULL;
     sndWndVector = rcvWndVector = rcvAdvVector = sndNxtVector = sndAckVector = rcvSeqVector = rcvAckVector = unackedVector =
     dupAcksVector = sndSacksVector = rcvSacksVector = rcvOooSegVector = rcvNASegVector =
-    tcpRcvQueueBytesVector = tcpRcvQueueDropsVector = pipeVector = sackedBytesVector = NULL;
+    tcpRcvQueueBytesVector = tcpRcvQueueDropsVector = pipeVector = sackedBytesVector = wndScaleVector = rcvWndScaleVector = NULL;
 }
 
 //
@@ -238,6 +239,8 @@ TCPConnection::TCPConnection(TCP *_mod, int _appGateIndex, int _connId)
     tcpRcvQueueDropsVector = NULL;
     pipeVector = NULL;
     sackedBytesVector = NULL;
+    wndScaleVector = NULL;
+    rcvWndScaleVector = NULL;
 
     bool sw = false;
     if(tcpMain != NULL)
@@ -263,6 +266,9 @@ TCPConnection::TCPConnection(TCP *_mod, int _appGateIndex, int _connId)
         sackedBytesVector = new cOutVector("rcvd sackedBytes");
         tcpRcvQueueBytesVector = new cOutVector("tcpRcvQueueBytes");
         tcpRcvQueueDropsVector = new cOutVector("tcpRcvQueueDrops");
+
+        wndScaleVector = new cOutVector("wndScaleVector");
+        rcvWndScaleVector = new cOutVector("rcvWndScaleVector");
     }
 }
 
@@ -317,6 +323,9 @@ TCPConnection::TCPConnection(TCP2 *_mod, int _appGateIndex, int _connId)
     tcpRcvQueueDropsVector = NULL;
     pipeVector = NULL;
     sackedBytesVector = NULL;
+    wndScaleVector = NULL;
+    rcvWndScaleVector = NULL;
+
 
     bool sw = false;
     if(tcpMain != NULL)
@@ -342,6 +351,9 @@ TCPConnection::TCPConnection(TCP2 *_mod, int _appGateIndex, int _connId)
         sackedBytesVector = new cOutVector("rcvd sackedBytes");
         tcpRcvQueueBytesVector = new cOutVector("tcpRcvQueueBytes");
         tcpRcvQueueDropsVector = new cOutVector("tcpRcvQueueDrops");
+
+        wndScaleVector = new cOutVector("wndScaleVector");
+        rcvWndScaleVector = new cOutVector("rcvWndScaleVector");
     }
 }
 
@@ -376,6 +388,8 @@ TCPConnection::~TCPConnection()
     delete tcpRcvQueueDropsVector;
     delete pipeVector;
     delete sackedBytesVector;
+    delete wndScaleVector;
+    delete rcvWndScaleVector;
 }
 
 bool TCPConnection::processTimer(cMessage *msg)

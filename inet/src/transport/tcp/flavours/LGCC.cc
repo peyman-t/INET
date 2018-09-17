@@ -107,8 +107,9 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
             rateVector->record(state->lgcc_rate);
     }
 
-    if(state->snd_wnd * 4 * 8 < state->lgcc_phyRate)
-        state->lgcc_carryingCap = state->snd_wnd * 4 * 8;
+    uint32 recvCarryingCap = (state->snd_wnd) * 8;
+    if(recvCarryingCap < state->lgcc_phyRate)
+        state->lgcc_carryingCap = recvCarryingCap;
     else
         state->lgcc_carryingCap = state->lgcc_phyRate;
 
