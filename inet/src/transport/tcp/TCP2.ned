@@ -221,6 +221,7 @@ simple TCP2 like ITCP
         double param2 = default(0.0); // ECNNUM=ecnnum_phi,  
         double param3 = default(0.0);
         double param4 = default(0.0);
+        double param5 = default(0.0); // pushback drop probability
     
 	gates:
         input appIn[] @labels(TCPCommand/down);

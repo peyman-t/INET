@@ -408,6 +408,8 @@ class INET_API TCPSocket
      */
     void processMessage(cMessage *msg);
     //@}
+
+    int getGateIndex();
 };
 
 #endif

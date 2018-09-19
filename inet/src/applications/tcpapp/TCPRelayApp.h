@@ -60,6 +60,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
     TCPSocket* getSendTCPSocket();
     long getSendQueueSize();
+    int getTCPOutGateIndex();
 
   protected:
     virtual bool isNodeUp();
@@ -95,6 +96,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     /** Redefine to handle incoming TCPStatusInfo. */
     virtual void socketStatusArrived(int connId, void *yourPtr, TCPStatusInfo *status) {delete status;}
     //@}
+
 };
 
 

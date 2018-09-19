@@ -290,7 +290,10 @@ void TCPConnection::sendToIP(TCPSegment *tcpseg, IPvXAddress src, IPvXAddress de
         controlInfo->setDestAddr(dest.get4());
         tcpseg->setControlInfo(controlInfo);
 
-        check_and_cast<TCP *>(simulation.getContextModule())->send(tcpseg, "ipOut");
+        if(tcpMain != NULL)
+            check_and_cast<TCP *>(simulation.getContextModule())->send(tcpseg, "ipOut");
+        else
+            check_and_cast<TCP2 *>(simulation.getContextModule())->send(tcpseg, "ipOut");
     }
     else
     {
@@ -305,7 +308,10 @@ void TCPConnection::sendToIP(TCPSegment *tcpseg, IPvXAddress src, IPvXAddress de
         controlInfo->setDestAddr(dest.get6());
         tcpseg->setControlInfo(controlInfo);
 
-        check_and_cast<TCP *>(simulation.getContextModule())->send(tcpseg, "ipv6Out");
+        if(tcpMain != NULL)
+            check_and_cast<TCP *>(simulation.getContextModule())->send(tcpseg, "ipv6Out");
+        else
+            check_and_cast<TCP2 *>(simulation.getContextModule())->send(tcpseg, "ipv6Out");
     }
 }
 

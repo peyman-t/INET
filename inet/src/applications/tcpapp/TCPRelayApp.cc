@@ -234,7 +234,7 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         delete msg;
     }
 
-    TCP2 *tcp = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp"));
+    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
     TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
     TCPConnection *conn1 = NULL;
     if(!reverse)
@@ -314,3 +314,10 @@ void TCPRelayApp::socketFailure(int, void *, int code)
     // subclasses may override this function, and add code try to reconnect after a delay.
     EV << "connection broken\n";
 }
+
+
+int TCPRelayApp::getTCPOutGateIndex() {
+    return ssocket.getGateIndex();
+}
+
+

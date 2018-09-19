@@ -365,3 +365,8 @@ void TCPSocket::readDataTransferModePar(cComponent &component)
     dataTransferMode = x;
 }
 
+int TCPSocket::getGateIndex() {
+    return gateToTcp->getIndex();
+}
+
+

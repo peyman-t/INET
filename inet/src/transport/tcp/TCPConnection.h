@@ -355,9 +355,10 @@ class INET_API TCPConnection
     TCP2 *tcpMain2; // TCP module
     TCPSACKRexmitQueue *rexmitQueue;
 
-  protected:
     // TCP behavior in data transfer state
     TCPAlgorithm *tcpAlgorithm;
+
+  protected:
 
     // timers
     cMessage *the2MSLTimer;

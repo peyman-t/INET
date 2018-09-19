@@ -106,6 +106,8 @@ void TCP::initialize(int stage)
         logverbose = !testing && netw->hasPar("logverbose") && netw->par("logverbose").boolValue();
 
         maxRecvWindowVector = new cOutVector("maxRcvBuffer");
+        dropPBVector = new cOutVector("dropPBVector");
+
 
     }
     else if (stage == 1)
@@ -122,6 +124,7 @@ void TCP::initialize(int stage)
 TCP::~TCP()
 {
     delete maxRecvWindowVector;
+    delete dropPBVector;
 
     while (!tcpAppConnMap.empty())
     {
@@ -212,30 +215,45 @@ void TCP::handleMessage(cMessage *msg)
                 TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
                 if(relay != NULL) {
                     TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
-                    TCPConnection *conn1 = tcp2->findConnForApp(0, relay->getSendTCPSocket()->getConnectionId());
+                    TCPConnection *conn1 = tcp2->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket()->getConnectionId());
                     if(conn1 != NULL) {
-                        if(conn1->getSendQueue()->getBytesAvailable(0) > 20000) {
+                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000) {
                             // pushback
                             // conn->getState()->maxRcvBuffer = 1500;
 
-                            // ECN mark
-                            double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
-                            if(dblrand() < d)
-                                tcpseg->setEcnBit(true);
-                            TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
-                            conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
-                            conn->getState()->maxRcvBufferChanged = true;
+
+                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+                                // ECN mark
+                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
+                                if(dblrand() < d)
+                                    tcpseg->setEcnBit(true);
+                                TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
+                                conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
+                                conn->getState()->maxRcvBufferChanged = true;
+
+                            } else {
+
+                                // drop
+                                double dprob = par("param5");
+                                if (dblrand() < dprob) {
+                                    dropPBVector->record(tcpseg->getSequenceNo());
+                                    delete tcpseg;
+                                    tcpseg = NULL;
+                                }
+//                                else
+//                                    dropPBVector->record(0);
+//                                conn->getState()->maxRcvBuffer = 3000;
+//                                conn->getState()->maxRcvBufferChanged = true;
+                            }
 
 
-                            // drop
-                            if (dblrand() < 0.00)
-                                delete tcpseg;
-                            else {
+                            if(tcpseg) {
                                 conn->getState()->ecn = tcpseg->getEcnBit();
                                 bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                                 if (!ret)
                                     removeConnection(conn);
                             }
+
                         } else {
                             conn->getState()->maxRcvBuffer = 10000000;
                             conn->getState()->maxRcvBufferChanged = true;
