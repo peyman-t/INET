@@ -241,6 +241,7 @@ TCPConnection::TCPConnection(TCP *_mod, int _appGateIndex, int _connId)
     sackedBytesVector = NULL;
     wndScaleVector = NULL;
     rcvWndScaleVector = NULL;
+    sendQueueSizeVector = NULL;
 
     bool sw = false;
     if(tcpMain != NULL)
@@ -269,6 +270,7 @@ TCPConnection::TCPConnection(TCP *_mod, int _appGateIndex, int _connId)
 
         wndScaleVector = new cOutVector("wndScaleVector");
         rcvWndScaleVector = new cOutVector("rcvWndScaleVector");
+        sendQueueSizeVector = new cOutVector("sendQueueSizeVector");
     }
 }
 
@@ -325,6 +327,7 @@ TCPConnection::TCPConnection(TCP2 *_mod, int _appGateIndex, int _connId)
     sackedBytesVector = NULL;
     wndScaleVector = NULL;
     rcvWndScaleVector = NULL;
+    sendQueueSizeVector = NULL;
 
 
     bool sw = false;
@@ -354,6 +357,7 @@ TCPConnection::TCPConnection(TCP2 *_mod, int _appGateIndex, int _connId)
 
         wndScaleVector = new cOutVector("wndScaleVector");
         rcvWndScaleVector = new cOutVector("rcvWndScaleVector");
+        sendQueueSizeVector = new cOutVector("sendQueueSizeVector");
     }
 }
 
@@ -390,6 +394,7 @@ TCPConnection::~TCPConnection()
     delete sackedBytesVector;
     delete wndScaleVector;
     delete rcvWndScaleVector;
+    delete sendQueueSizeVector;
 }
 
 bool TCPConnection::processTimer(cMessage *msg)

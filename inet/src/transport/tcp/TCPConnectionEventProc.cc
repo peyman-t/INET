@@ -159,6 +159,7 @@ void TCPConnection::process_SEND(TCPEventCode& event, TCPCommand *tcpCommand, cM
             startSynRexmitTimer();
             scheduleTimeout(connEstabTimer, TCP_TIMEOUT_CONN_ESTAB);
             sendQueue->enqueueAppData(PK(msg));  // queue up for later
+            sendQueueSizeVector->record(sendQueue->getBytesAvailable(state->snd_una));
             tcpEV << sendQueue->getBytesAvailable(state->snd_una) << " bytes in queue\n";
             break;
 
@@ -166,12 +167,14 @@ void TCPConnection::process_SEND(TCPEventCode& event, TCPCommand *tcpCommand, cM
         case TCP_S_SYN_SENT:
             tcpEV << "Queueing up data for sending later.\n";
             sendQueue->enqueueAppData(PK(msg)); // queue up for later
+            sendQueueSizeVector->record(sendQueue->getBytesAvailable(state->snd_una));
             tcpEV << sendQueue->getBytesAvailable(state->snd_una) << " bytes in queue\n";
             break;
 
         case TCP_S_ESTABLISHED:
         case TCP_S_CLOSE_WAIT:
             sendQueue->enqueueAppData(PK(msg));
+            sendQueueSizeVector->record(sendQueue->getBytesAvailable(state->snd_una));
             tcpEV << sendQueue->getBytesAvailable(state->snd_una) << " bytes in queue, plus "
                   << (state->snd_max-state->snd_una) << " bytes unacknowledged\n";
             tcpAlgorithm->sendCommandInvoked();

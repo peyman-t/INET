@@ -148,6 +148,7 @@ class INET_API TCP2 : public cSimpleModule, public ILifecycle
     std::multiset<ushort> usedEphemeralPorts;
 
     cOutVector *maxRecvWindowVector;
+    cOutVector *dropPBVector;
 
   protected:
     /** Factory method; may be overriden for customizing TCP */

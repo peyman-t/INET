@@ -390,6 +390,7 @@ class INET_API TCPConnection
 
     cOutVector *wndScaleVector;   // number of drops in tcp receive queue
     cOutVector *rcvWndScaleVector;   // number of drops in tcp receive queue
+    cOutVector *sendQueueSizeVector;
 
   protected:
     /** @name FSM transitions: analysing events and executing state transitions */

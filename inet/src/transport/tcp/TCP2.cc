@@ -104,6 +104,7 @@ void TCP2::initialize(int stage)
         logverbose = !testing && netw->hasPar("logverbose") && netw->par("logverbose").boolValue();
 
         maxRecvWindowVector = new cOutVector("maxRcvBuffer");
+        dropPBVector = new cOutVector("dropPBVector");
 
     }
     else if (stage == 1)
@@ -120,6 +121,7 @@ void TCP2::initialize(int stage)
 TCP2::~TCP2()
 {
     delete maxRecvWindowVector;
+    delete dropPBVector;
 
     while (!tcpAppConnMap.empty())
     {
@@ -214,16 +216,19 @@ void TCP2::handleMessage(cMessage *msg)
                     TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
                     TCPConnection *conn1 = tcp->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket()->getConnectionId());
                     if(conn1 != NULL) {
-                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000) {
+                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
                             // pushback
                             // conn->getState()->maxRcvBuffer = 1500;
 
 
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
                                 // ECN mark
-                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
-                                if(dblrand() < d)
+                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
+                                if(dblrand() < d) {
                                     tcpseg->setEcnBit(true);
+                                    dropPBVector->record(1);
+                                } else
+                                    dropPBVector->record(0);
                                 TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
                                 conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
                                 conn->getState()->maxRcvBufferChanged = true;
@@ -233,7 +238,7 @@ void TCP2::handleMessage(cMessage *msg)
                                 // drop
                                 double dprob = par("param5");
                                 if (dblrand() < dprob) {
-                                    //dropPBVector->record(tcpseg->getSequenceNo());
+                                    dropPBVector->record(tcpseg->getSequenceNo());
                                     delete tcpseg;
                                     tcpseg = NULL;
                                 }

@@ -217,16 +217,19 @@ void TCP::handleMessage(cMessage *msg)
                     TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
                     TCPConnection *conn1 = tcp2->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket()->getConnectionId());
                     if(conn1 != NULL) {
-                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000) {
+                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
                             // pushback
                             // conn->getState()->maxRcvBuffer = 1500;
 
 
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
                                 // ECN mark
-                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 100000;
-                                if(dblrand() < d)
+                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
+                                if(dblrand() < d) {
                                     tcpseg->setEcnBit(true);
+                                    dropPBVector->record(1);
+                                } else
+                                    dropPBVector->record(0);
                                 TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
                                 conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
                                 conn->getState()->maxRcvBufferChanged = true;
