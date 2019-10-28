@@ -60,6 +60,8 @@ simple REDDropperNUM
         @display("i=block/downarrow");
         @signal[markingProb](type=double);
         @statistic[marked](title="marking Prob"; source="markingProb"; record=mean; interpolationmode=none);
+        @signal[queueLength](type=double);
+        @statistic[queueLen](title="queueLength"; source="queueLength"; record=vector,mean; interpolationmode=none);
 
     gates:
         input in[numGates];

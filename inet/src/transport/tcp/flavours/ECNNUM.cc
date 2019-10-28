@@ -133,7 +133,7 @@ void ECNNUM::processRateUpdateTimer(TCPEventCode& event)
 //        state->ecnnum_Rate++;
 //
 //    } else
-        if(state->dctcp_marked / state->dctcp_total == 1) {
+        if(state->ecnnum_fraction == 1) { //state->dctcp_marked / state->dctcp_total == 1
 //        newCwnd /= 1.1;
 //        state->ecnnum_Rate = (newCwnd * 8 / (double)state->minrtt.dbl()) / 1000 / state->snd_mss / 8;
         state->ecnnum_Rate /= 1.1; // 1.5

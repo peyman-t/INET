@@ -48,6 +48,7 @@ class REDDropperNUM : public AlgorithmicDropperBase
     cOutVector *markedNotSID;
 
     simsignal_t markingProbSignal;
+    simsignal_t queueLenSignal;
 
   public:
     REDDropperNUM() : wq(0), minths(NULL), maxths(NULL), maxps(NULL), avg(0.0) {marked = markedSID = markedNotSID = NULL;}

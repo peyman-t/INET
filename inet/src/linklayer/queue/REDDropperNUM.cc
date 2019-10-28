@@ -94,6 +94,7 @@ void REDDropperNUM::initialize()
     markedNotSID = new cOutVector("markedNotSID");
 
     markingProbSignal = registerSignal("markingProb");
+    queueLenSignal = registerSignal("queueLength");
 
     markNext = false;
 
@@ -134,6 +135,9 @@ bool REDDropperNUM::shouldDrop(cPacket *packet)
     const double pkrate = pkrates[i];
     const double mark = marks[i];
     const int queueLength = getLength();
+
+    if(simTime() >= recStart)
+        emit(queueLenSignal, queueLength);
 
     if (queueLength > 0)
     {
