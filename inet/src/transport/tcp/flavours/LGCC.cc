@@ -92,14 +92,15 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     if(state->lgcc_pacing) {
         TCPTahoeRenoFamily::processRateUpdateTimer(event);
 
-        conn->scheduleRateUpdate(rateUpdateTimer, 0.00048);
+        conn->scheduleRateUpdate(rateUpdateTimer, state->minrtt.dbl());
     }
 
     if(state->lgcc_cntr == 0) {
-        if(conn->tcpMain != NULL)
+        if(conn->tcpMain != NULL) {
             state->lgcc_phyRate = conn->tcpMain->par("ldatarate");
-        else
+        } else {
             state->lgcc_phyRate = conn->tcpMain2->par("ldatarate");
+        }
 //        state->minrtt = 0.000140;
 
         state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
@@ -240,7 +241,7 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
         // lgcc_phyRate -> lgcc_carryingCap
         double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_carryingCap);
         if(totalSpace <0)
-            totalSpace = 0.00001;
+            totalSpace = 0.000001;
         state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
         if(!state->lgcc_sch) {
             conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
@@ -292,6 +293,14 @@ void LGCC::receivedDataAck(uint32 firstSeqAcked)
             markingProb->record(1);
         } else
             markingProb->record(0);
+
+        if(state->lgcc_cntr == 0) {
+            if(conn->tcpMain != NULL) {
+                state->lgcc_pacing = conn->tcpMain->par("lpacing");
+            } else {
+                state->lgcc_pacing = conn->tcpMain2->par("lpacing");
+            }
+        }
 
         if(state->lgcc_pacing) {
             if(!state->lgcc_sch_rate) {

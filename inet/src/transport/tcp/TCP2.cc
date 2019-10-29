@@ -44,6 +44,7 @@
 #include <TCPRelayApp.h>
 #include <TCPBaseAlg.h>
 #include <TCP.h>
+#include <TCPTahoeRenoFamily.h>
 #include "PPP.h"
 
 Define_Module(TCP2);
@@ -216,21 +217,25 @@ void TCP2::handleMessage(cMessage *msg)
                     TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
                     TCPConnection *conn1 = tcp->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket()->getConnectionId());
                     if(conn1 != NULL) {
-                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
+//                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000000) {
+                        if(par("lgccAggregated")) {
                             // pushback
                             // conn->getState()->maxRcvBuffer = 1500;
 
 
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
                                 // ECN mark
-                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
+//                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
+                                double d = 1 - relay->getShare();
                                 if(dblrand() < d) {
                                     tcpseg->setEcnBit(true);
                                     dropPBVector->record(1);
                                 } else
                                     dropPBVector->record(0);
-                                TCPBaseAlgStateVariables *state1 = dynamic_cast<TCPBaseAlgStateVariables *>(conn1->getState());
-                                conn->getState()->maxRcvBuffer = state1->snd_cwnd / state1->minrtt;
+                                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+                                conn->getState()->maxRcvBuffer = state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
+                                if(conn->getState()->maxRcvBuffer < 3000)
+                                    conn->getState()->maxRcvBuffer = 3000;
                                 conn->getState()->maxRcvBufferChanged = true;
 
                             } else {
@@ -257,7 +262,14 @@ void TCP2::handleMessage(cMessage *msg)
                             }
 
                         } else {
-                            conn->getState()->maxRcvBuffer = 10000000;
+                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+                                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+                                conn->getState()->maxRcvBuffer = state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
+                                if(conn->getState()->maxRcvBuffer < 3000)
+                                    conn->getState()->maxRcvBuffer = 3000;
+                            } else {
+                                conn->getState()->maxRcvBuffer = 10000000;
+                            }
                             conn->getState()->maxRcvBufferChanged = true;
                             conn->getState()->ecn = tcpseg->getEcnBit();
                             bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);

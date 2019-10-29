@@ -40,6 +40,7 @@ void TCPRelayApp::initialize(int stage)
     {
         delay = par("echoDelay");
         echoFactor = par("echoFactor");
+        share = par("share");
 
         reverse = par("reverse");
         if(!reverse) {
@@ -268,6 +269,10 @@ bool TCPRelayApp::handleOperationStage(LifecycleOperation *operation, int stage,
     else if (dynamic_cast<NodeCrashOperation *>(operation)) ;
     else throw cRuntimeError("Unsupported lifecycle operation '%s'", operation->getClassName());
     return true;
+}
+
+double TCPRelayApp::getShare() {
+    return share;
 }
 
 void TCPRelayApp::finish()

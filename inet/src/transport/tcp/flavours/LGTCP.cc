@@ -27,6 +27,11 @@ Register_Class(LGTCP);
 LGTCP::LGTCP() : TCPTahoeRenoFamily(),
         state((TCPRenoStateVariables *&)TCPAlgorithm::state)
 {
+    if(conn->tcpMain != NULL) {
+         state->lgcc_pacing = conn->tcpMain->par("lpacing");
+     } else {
+         state->lgcc_pacing = conn->tcpMain2->par("lpacing");
+     }
 }
 
 void LGTCP::recalculateSlowStartThreshold()
@@ -92,7 +97,7 @@ void LGTCP::processRateUpdateTimer(TCPEventCode& event)
     if(state->lgcc_pacing) {
         TCPTahoeRenoFamily::processRateUpdateTimer(event);
 
-        conn->scheduleRateUpdate(rateUpdateTimer, 0.00048);
+        conn->scheduleRateUpdate(rateUpdateTimer, state->minrtt.dbl());
     }
 
     if(state->lgcc_cntr == 0) {

@@ -31,6 +31,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
   protected:
     simtime_t delay;
     double echoFactor;
+    double share;
 
     TCPSocket socket;
     TCPSocket socket2;
@@ -61,6 +62,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     TCPSocket* getSendTCPSocket();
     long getSendQueueSize();
     int getTCPOutGateIndex();
+    double getShare();
 
   protected:
     virtual bool isNodeUp();

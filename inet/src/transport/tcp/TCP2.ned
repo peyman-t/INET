@@ -217,6 +217,8 @@ simple TCP2 like ITCP
         string receiveQueueClass = default(""); // Obsolete!!!
         @display("i=block/wheelbarrow");
         double ldatarate @unit(bps) = default(10Mbps);
+        bool lpacing = default(false);
+        bool lgccAggregated = default(false);
         double param1 = default(0.0); // ECNNUM=ecnnum_alpha,  
         double param2 = default(0.0); // ECNNUM=ecnnum_phi,  
         double param3 = default(0.0);
