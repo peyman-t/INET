@@ -74,7 +74,12 @@ simple TCPRelayApp like ITCPApp
         double share = default(1);
         bool reverse = default(false);
         double echoDelay @unit(s) = default(0s);
+        double interval @unit(s) = default(0.001s);
+        double beta = default(0.001);
         string dataTransferMode @enum("bytecount","object","bytestream") = default("bytecount");
+        string dataTransferMode2 @enum("bytecount","object","bytestream") = default("bytecount");
+        string forwarding = default("");
+        string weights = default("");
         @display("i=block/app");
         @signal[sentPk](type=cPacket);
         @signal[rcvdPk](type=cPacket);

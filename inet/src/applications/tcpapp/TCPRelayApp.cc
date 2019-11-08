@@ -12,9 +12,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
+#include <map>
+#include <set>
 
 #include <TCPRelayApp.h>
 
+#include "IPv4ControlInfo.h"
 #include "ByteArrayMessage.h"
 #include "TCPCommand_m.h"
 #include "ModuleAccess.h"
@@ -25,6 +28,7 @@
 #include "TCP2.h"
 #include "TCPConnection.h"
 #include "TCPSendQueue.h"
+#include <TCPTahoeRenoFamily.h>
 
 Define_Module(TCPRelayApp);
 
@@ -41,6 +45,9 @@ void TCPRelayApp::initialize(int stage)
         delay = par("echoDelay");
         echoFactor = par("echoFactor");
         share = par("share");
+        interval = par("interval");
+        beta = par("beta");
+
 
         reverse = par("reverse");
         if(!reverse) {
@@ -57,8 +64,15 @@ void TCPRelayApp::initialize(int stage)
 
         bytesRcvd = bytesSent = 0;
         sendQueueSize = 0;
+        lastBytesRecv = 0;
+        lastCalcInputRate = 0;
+        cost = 0;
+        inputRate = 0;
         WATCH(bytesRcvd);
         WATCH(bytesSent);
+
+        costVector = new cOutVector("costVector");
+        sendBufferVector = new cOutVector("sendBufferVector");
 
         socket.setOutputGate(gate(outGate)); //"tcpOut"
         socket.readDataTransferModePar(*this);
@@ -75,28 +89,125 @@ void TCPRelayApp::initialize(int stage)
 
         const char *localAddress = par("localAddress");
         int localPort = par("localPort");
-        ssocket.readDataTransferModePar(*this);
-        ssocket.bind(*localAddress ? IPvXAddressResolver().resolve(localAddress) : IPvXAddress(), localPort);
-        ssocket.setCallbackObject(this);
-        ssocket.setOutputGate(gate(outGate2)); //"tcp2Out"
-        // we need a new connId if this is not the first connection
-        ssocket.renewSocket();
 
-        // connect
-        const char *connectAddress = par("remoteAddress");
-        int connectPort = par("remotePort");
+        weightSum = 0;
+        const char * weights;
+        weights = par("weights");
+        int i = 0;
+        while(weights[i]) {
 
-        EV << "issuing OPEN command\n";
+            std::string host = "";
+            while(weights[i] != '=') {
+                host += weights[i];
+                i++;
+            }
+            i++;
+            std::string weight = "";
+            while(weights[i] != ';') {
+                weight += weights[i];
+                i++;
+            }
 
-        IPvXAddress destination;
-        IPvXAddressResolver().tryResolve(connectAddress, destination);
+            weightSum += std::atof(weight.c_str());
+            weightMap.insert(std::pair<IPvXAddress, double>(IPvXAddressResolver().resolve(host.c_str()), std::atof(weight.c_str())));
 
+            i++;
+        }
 
-        if (destination.isUnspecified())
-            EV << "cannot resolve destination address: " << connectAddress << endl;
-        else
-            ssocket.connect(destination, connectPort);
+        const char * forwarding;
+        forwarding = par("forwarding");
 
+        std::string str = "";
+        if(strcmp(forwarding, "") == 0) {
+            const char *connectAddress = par("remoteAddress");
+            int connectPort = par("remotePort");
+            str = std::string("*=") + std::string(connectAddress) + std::string(":") + std::to_string(connectPort) + std::string(";");
+            forwarding = str.c_str();
+        }
+
+        i = 0;
+        while(forwarding[i]) {
+
+            std::string src = "";
+            while(forwarding[i] != '=') {
+                src += forwarding[i];
+                i++;
+            }
+            i++;
+            std::string dst = "";
+            while(forwarding[i] != ':') {
+                dst += forwarding[i];
+                i++;
+            }
+            i++;
+            std::string port = "";
+            while(forwarding[i] != ';') {
+                port += forwarding[i];
+                i++;
+            }
+
+            TCPSocket * ssocket = new TCPSocket();
+            ssocket->readDataTransferModePar(*this);
+            ssocket->bind(*localAddress ? IPvXAddressResolver().resolve(localAddress) : IPvXAddress(), localPort);
+            ssocket->setCallbackObject(this);
+
+            const char * txMode = par("dataTransferMode2");
+            if(strcmp(txMode, "bytestream") == 0)
+                ssocket->setDataTransferMode(TCP_TRANSFER_BYTESTREAM);
+            else if(strcmp(txMode, "object") == 0)
+                ssocket->setDataTransferMode(TCP_TRANSFER_OBJECT);
+            else
+                ssocket->setDataTransferMode(TCP_TRANSFER_BYTECOUNT);
+            ssocket->setOutputGate(gate(outGate2)); //"tcp2Out"
+            // we need a new connId if this is not the first connection
+            ssocket->renewSocket();
+            IPvXAddress destination;
+            IPvXAddressResolver().tryResolve(dst.c_str(), destination);
+
+            if (destination.isUnspecified())
+                EV << "cannot resolve destination address: " << dst << endl;
+            else {
+                ssocket->connect(destination, std::atoi(port.c_str()));
+                if(src != "*")
+                    src = IPvXAddressResolver().resolve(src.c_str()).str();
+                forwardingMap.insert(std::pair<std::string, TCPSocket *>(src, ssocket));
+            }
+
+            i++;
+        }
+
+//        if(forwardingMap.empty()) {
+//            ssocket.readDataTransferModePar(*this);
+//            ssocket.bind(*localAddress ? IPvXAddressResolver().resolve(localAddress) : IPvXAddress(), localPort);
+//            ssocket.setCallbackObject(this);
+//
+//            const char * txMode = par("dataTransferMode2");
+//            if(strcmp(txMode, "bytestream") == 0)
+//                ssocket.setDataTransferMode(TCP_TRANSFER_BYTESTREAM);
+//            else if(strcmp(txMode, "object") == 0)
+//                ssocket.setDataTransferMode(TCP_TRANSFER_OBJECT);
+//            else
+//                ssocket.setDataTransferMode(TCP_TRANSFER_BYTECOUNT);
+//            ssocket.setOutputGate(gate(outGate2)); //"tcp2Out"
+//            // we need a new connId if this is not the first connection
+//            ssocket.renewSocket();
+//
+//            // connect
+//            const char *connectAddress = par("remoteAddress");
+//            int connectPort = par("remotePort");
+//
+//            EV << "issuing OPEN command\n";
+//
+//            IPvXAddress destination;
+//            IPvXAddressResolver().tryResolve(connectAddress, destination);
+//
+//
+//            if (destination.isUnspecified())
+//                EV << "cannot resolve destination address: " << connectAddress << endl;
+//            else
+//                ssocket.connect(destination, connectPort);
+//        }
+//
 //        ssocket2.readDataTransferModePar(*this);
 //        ssocket2.bind(*localAddress ? IPvXAddressResolver().resolve(localAddress) : IPvXAddress(), localPort);
 //        ssocket2.setCallbackObject(this);
@@ -126,7 +237,11 @@ void TCPRelayApp::stopListening()
 {
     socket.close();
 //    socket2.close();
-    ssocket.close();
+    ForwardingMap::iterator it;
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++)
+        it->second->close();
+
+//    ssocket.close();
 //    ssocket2.close();
 }
 
@@ -138,7 +253,8 @@ void TCPRelayApp::sendDown(cMessage *msg)
         emit(sentPkSignal, (cPacket *)msg);
     }
 
-    std::string agate = msg->getArrivalGate()->getName();
+//    std::string agate = msg->getArrivalGate()->getName();
+
 //    if(agate == "tcp2In")
 //        socket.send(msg);
 //    else if(agate == "tcpIn")
@@ -149,10 +265,19 @@ void TCPRelayApp::sendDown(cMessage *msg)
 //    else if(agate == "tcpIn")
 //        send(msg, "tcpOut");
 
-    if(agate == inGate) { //"tcpIn"
+//    if(agate == inGate)
+    { //"tcpIn"
+
+        cPacket *pkt = check_and_cast<cPacket *>(msg);
+        cPacket * cdec = pkt->getEncapsulatedPacket();
+        const char * srcIPAddr;
+        if(cdec != NULL)
+            srcIPAddr = cdec->getName();
+        TCPSocket *ssocket = getSendTCPSocket(srcIPAddr);
+
         if((msg->getControlInfo() != NULL))
             msg->removeControlInfo();
-        ssocket.send(msg);
+        ssocket->send(msg);
     }
 //    else if(agate == "tcpIn")
 //        send(msg, "tcpOut");
@@ -164,8 +289,19 @@ long TCPRelayApp::getSendQueueSize() {
 }
 
 
-TCPSocket* TCPRelayApp::getSendTCPSocket() {
-    return &ssocket;
+TCPSocket* TCPRelayApp::getSendTCPSocket(const char * srcIPAddr) {
+
+    ForwardingMap::iterator it;
+    it = forwardingMap.find(srcIPAddr);
+    if(it != forwardingMap.end())
+        return it->second;
+    else {
+        it = forwardingMap.find("*");
+        if(it != forwardingMap.end())
+            return it->second;
+        else
+            return NULL;
+    }
 }
 
 
@@ -207,7 +343,74 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         cPacket *pkt = check_and_cast<cPacket *>(msg);
         emit(rcvdPkSignal, pkt);
         bytesRcvd += pkt->getByteLength();
+        lastBytesRecv += pkt->getByteLength();
+        IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)pkt->removeControlInfo();
+        IPvXAddress srcAddr = controlInfo->getSrcAddr();
         pkt->removeControlInfo();
+
+        const char * srcIPAddr;
+        cPacket * cdec = pkt->getEncapsulatedPacket();
+        if(cdec != NULL)
+            srcIPAddr = cdec->getName();
+        else {
+            srcIPAddr = srcAddr.str().c_str();
+            pkt->encapsulate(new cPacket(srcIPAddr));
+        }
+
+//        ByteArrayMessage *msg2 = new ByteArrayMessage("data1");
+//        unsigned char *ptr = new unsigned char[4];
+//
+//        for (int i = 0; i < 4; i++)
+//            ptr[i] = srcAddr.str()[i];
+//
+//        msg2->getByteArray().assignBuffer(ptr, 4);
+//        msg2->setByteLength(pkt->getByteLength());
+//
+//        delete msg2;
+//        delete pkt;
+//        pkt = msg2;
+
+        simtime_t now1 = simTime();
+
+        if(now1 - lastCalcInputRate >= interval){
+            TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+            TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+            TCPConnection *conn1 = NULL;
+            if(!reverse)
+                conn1 = tcp2->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+            else
+                conn1 = tcp->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+
+            inputRate = (lastBytesRecv) * 8 / (now1 - lastCalcInputRate);
+            lastBytesRecv = 0;
+            lastCalcInputRate = now1;
+
+            if (sendBufferVector)
+                sendBufferVector->record(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()));
+
+            if(strcmp(conn1->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+//                double a = 0;
+//                if(cost == 0)
+//                    a = std::max(0.0, inputRate - state1->lgcc_rate * state1->lgcc_carryingCap);
+//                else
+//                    a = inputRate - state1->lgcc_rate * state1->lgcc_carryingCap;
+
+//                double backloggedRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) * 8 / interval;
+                double outputRate = (state1->lgcc_rate * state1->lgcc_carryingCap);
+//                outputRate = outputRate - backloggedRate;
+//                if(outputRate <= 0)
+//                    outputRate = 1;
+
+                cost = std::max(0.0, std::min(1.0, cost + beta * (inputRate - outputRate) / (outputRate)));
+
+
+
+                if (costVector)
+                    costVector->record(cost);
+
+            }
+        }
 
 //        TCPCommand *ind = check_and_cast<TCPCommand *>(pkt->removeControlInfo());
 //        EV << "connection id : " << ind->getConnId() <<endl;
@@ -235,16 +438,16 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         delete msg;
     }
 
-    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
-    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
-    TCPConnection *conn1 = NULL;
-    if(!reverse)
-        conn1 = tcp2->findConnForApp(0, getSendTCPSocket()->getConnectionId());
-    else
-        conn1 = tcp->findConnForApp(0, getSendTCPSocket()->getConnectionId());
-
-    if(conn1 != NULL)
-        sendQueueSize = (long)(conn1->getSendQueue()->getBytesAvailable(0));
+//    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+//    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+//    TCPConnection *conn1 = NULL;
+//    if(!reverse)
+//        conn1 = tcp2->findConnForApp(0, getSendTCPSocket()->getConnectionId());
+//    else
+//        conn1 = tcp->findConnForApp(0, getSendTCPSocket()->getConnectionId());
+//
+//    if(conn1 != NULL)
+//        sendQueueSize = (long)(conn1->getSendQueue()->getBytesAvailable(0));
 
     if (ev.isGUI())
     {
@@ -271,14 +474,30 @@ bool TCPRelayApp::handleOperationStage(LifecycleOperation *operation, int stage,
     return true;
 }
 
-double TCPRelayApp::getShare() {
-    return share;
+double TCPRelayApp::getMarkingProb(IPvXAddress srcAddr) {
+    if(weightMap.empty())
+        return cost;
+    else {
+        WeightsMap::iterator it;
+        it = weightMap.find(srcAddr);
+        if(it != weightMap.end())
+            return 1 - (it->second / weightSum);
+        else
+            return 0;
+    }
 }
 
 void TCPRelayApp::finish()
 {
     recordScalar("bytesRcvd", bytesRcvd);
     recordScalar("bytesSent", bytesSent);
+
+    ForwardingMap::iterator it;
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++)
+        delete it->second;
+
+    delete costVector;
+    delete sendBufferVector;
 }
 
 void TCPRelayApp::socketEstablished(int, void *)

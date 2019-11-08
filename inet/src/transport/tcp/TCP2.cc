@@ -215,7 +215,7 @@ void TCP2::handleMessage(cMessage *msg)
 //                    ppp->
 
                     TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
-                    TCPConnection *conn1 = tcp->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket()->getConnectionId());
+                    TCPConnection *conn1 = tcp->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket(srcAddr.str().c_str())->getConnectionId());
                     if(conn1 != NULL) {
 //                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000000) {
                         if(par("lgccAggregated")) {
@@ -226,7 +226,7 @@ void TCP2::handleMessage(cMessage *msg)
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
                                 // ECN mark
 //                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
-                                double d = 1 - relay->getShare();
+                                double d = relay->getMarkingProb(srcAddr);
                                 if(dblrand() < d) {
                                     tcpseg->setEcnBit(true);
                                     dropPBVector->record(1);
@@ -241,11 +241,13 @@ void TCP2::handleMessage(cMessage *msg)
                             } else {
 
                                 // drop
-                                double dprob = par("param5");
-                                if (dblrand() < dprob) {
-                                    dropPBVector->record(tcpseg->getSequenceNo());
-                                    delete tcpseg;
-                                    tcpseg = NULL;
+                                if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
+                                    double dprob = par("param5");
+                                    if (dblrand() < dprob) {
+                                        dropPBVector->record(tcpseg->getSequenceNo());
+                                        delete tcpseg;
+                                        tcpseg = NULL;
+                                    }
                                 }
 //                                else
 //                                    dropPBVector->record(0);
@@ -268,7 +270,10 @@ void TCP2::handleMessage(cMessage *msg)
                                 if(conn->getState()->maxRcvBuffer < 3000)
                                     conn->getState()->maxRcvBuffer = 3000;
                             } else {
-                                conn->getState()->maxRcvBuffer = 10000000;
+                                if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
+                                    conn->getState()->maxRcvBuffer = 3000;
+                                } else
+                                    conn->getState()->maxRcvBuffer = 10000000;
                             }
                             conn->getState()->maxRcvBufferChanged = true;
                             conn->getState()->ecn = tcpseg->getEcnBit();

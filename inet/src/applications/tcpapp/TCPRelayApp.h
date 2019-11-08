@@ -32,6 +32,11 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     simtime_t delay;
     double echoFactor;
     double share;
+    double inputRate;
+    double lastBytesRecv;
+    double cost;
+    double interval;
+    double beta;
 
     TCPSocket socket;
     TCPSocket socket2;
@@ -52,17 +57,29 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     char * outGateName = "tcpOut";
     char * outGate2Name = "tcp2Out";
 
+    typedef std::map<IPvXAddress, double> WeightsMap;
+    WeightsMap weightMap;
+    double weightSum;
+
+    typedef std::map<std::string, TCPSocket *> ForwardingMap;
+    ForwardingMap forwardingMap;
+
     char *inGate, *outGate, *inGate2, *outGate2;
+
+    simtime_t lastCalcInputRate;
 
     static simsignal_t rcvdPkSignal;
     static simsignal_t sentPkSignal;
 
+    cOutVector *costVector;
+    cOutVector *sendBufferVector;
+
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
-    TCPSocket* getSendTCPSocket();
+    TCPSocket* getSendTCPSocket(const char * srcIPAddr);
     long getSendQueueSize();
     int getTCPOutGateIndex();
-    double getShare();
+    double getMarkingProb(IPvXAddress srcAddr);
 
   protected:
     virtual bool isNodeUp();
