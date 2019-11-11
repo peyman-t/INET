@@ -183,7 +183,7 @@ void TCP::handleMessage(cMessage *msg)
             }
             else if (dynamic_cast<IPv6ControlInfo *>(tcpseg->getControlInfo()) != NULL)
             {
-                IPv6ControlInfo *controlInfo = (IPv6ControlInfo *)tcpseg->removeControlInfo();
+                IPv6ControlInfo *controlInfo = (IPv6ControlInfo *)tcpseg->getControlInfo();
                 srcAddr = controlInfo->getSrcAddr();
                 destAddr = controlInfo->getDestAddr();
                 tcpseg->setEcnBit(controlInfo->getExplicitCongestionNotification());
@@ -198,8 +198,10 @@ void TCP::handleMessage(cMessage *msg)
             // process segment
             TCPConnection *conn = findConnForSegment(tcpseg, srcAddr, destAddr);
             if (conn)
-            {
 
+            {
+                std::string strAddr = srcAddr.str();
+                EV << "Got TCPSeg from " << strAddr << "\n";
 
                 // Peyman -- original code
 //                conn->getState()->ecn = tcpseg->getEcnBit();
@@ -215,9 +217,13 @@ void TCP::handleMessage(cMessage *msg)
                 str = str + "]";
                 TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
                 if(relay != NULL) {
-                    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
-                    TCPConnection *conn1 = tcp2->findConnForApp(conn->appGateIndex, relay->getSendTCPSocket(srcAddr.str().c_str())->getConnectionId());
-                    if(conn1 != NULL) {
+//                    relay->encapsulateSender(tcpseg, srcAddr);
+//                    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+//                    TCPSocket * socket = relay->getSendTCPSocket(relay->getFirstSender(tcpseg));
+//                    TCPConnection *conn1 = NULL;
+//                    if(socket != NULL)
+//                        conn1 = tcp2->findConnForApp(conn->appGateIndex, socket->getConnectionId());
+//                    if(conn1 != NULL) {
 //                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000000) {
                         if(par("lgccAggregated")) {
                             // pushback
@@ -233,8 +239,7 @@ void TCP::handleMessage(cMessage *msg)
                                     dropPBVector->record(1);
                                 } else
                                     dropPBVector->record(0);
-                                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
-                                conn->getState()->maxRcvBuffer = state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
+                                conn->getState()->maxRcvBuffer = relay->getNextRate();
                                 if(conn->getState()->maxRcvBuffer < 3000)
                                     conn->getState()->maxRcvBuffer = 3000;
 
@@ -243,7 +248,7 @@ void TCP::handleMessage(cMessage *msg)
                             } else {
 
                                 // drop
-                                if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
+                                if(relay->needToBlock()) {
                                     double dprob = par("param5");
                                     if (dblrand() < dprob) {
                                         dropPBVector->record(tcpseg->getSequenceNo());
@@ -267,12 +272,11 @@ void TCP::handleMessage(cMessage *msg)
 
                         } else {
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-                                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
-                                conn->getState()->maxRcvBuffer = state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
+                                conn->getState()->maxRcvBuffer = relay->getNextRate();
                                 if(conn->getState()->maxRcvBuffer < 3000)
                                     conn->getState()->maxRcvBuffer = 3000;
                             } else {
-                                if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
+                                if(relay->needToBlock()) {
                                     conn->getState()->maxRcvBuffer = 3000;
                                 } else
                                     conn->getState()->maxRcvBuffer = 10000000;
@@ -284,14 +288,14 @@ void TCP::handleMessage(cMessage *msg)
                                 removeConnection(conn);
                         }
                         maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
-                    } else {
-                        conn->getState()->maxRcvBuffer = 10000000;
-                        conn->getState()->maxRcvBufferChanged = true;
-                        conn->getState()->ecn = tcpseg->getEcnBit();
-                        bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
-                        if (!ret)
-                            removeConnection(conn);
-                    }
+//                    } else {
+//                        conn->getState()->maxRcvBuffer = 10000000;
+//                        conn->getState()->maxRcvBufferChanged = true;
+//                        conn->getState()->ecn = tcpseg->getEcnBit();
+//                        bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+//                        if (!ret)
+//                            removeConnection(conn);
+//                    }
                 } else {
                     conn->getState()->ecn = tcpseg->getEcnBit();
                     bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);

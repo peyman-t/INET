@@ -69,7 +69,7 @@ simple TCPRelayApp like ITCPApp
         string localAddress = default(""); // local address; may be left empty ("")
         int localPort; // port number to listen on
         string remoteAddress = default(""); // remote address; may be left empty ("")
-        int remotePort; // port number to connect to
+        int remotePort = default(0); // port number to connect to
         double echoFactor = default(1);
         double share = default(1);
         bool reverse = default(false);

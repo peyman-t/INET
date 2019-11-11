@@ -77,8 +77,12 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
     TCPSocket* getSendTCPSocket(const char * srcIPAddr);
+    const char * getFirstSender(cPacket * pkt);
     long getSendQueueSize();
     int getTCPOutGateIndex();
+    uint32 getNextRate();
+    bool needToBlock();
+    void encapsulateSender(cPacket * pkt, IPvXAddress srcAddr);
     double getMarkingProb(IPvXAddress srcAddr);
 
   protected:

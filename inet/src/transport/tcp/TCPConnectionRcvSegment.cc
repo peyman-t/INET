@@ -27,6 +27,7 @@
 #include "TCPReceiveQueue.h"
 #include "TCPAlgorithm.h"
 #include "TCPTahoeRenoFamily.h"
+#include "IPv4ControlInfo.h"
 
 bool TCPConnection::tryFastRoute(TCPSegment *tcpseg)
 {
@@ -615,6 +616,13 @@ TCPEventCode TCPConnection::processSegment1stThru8th(TCPSegment *tcpseg)
                     {
                         msg->setKind(TCP_I_DATA);  // TBD currently we never send TCP_I_URGENT_DATA
                         TCPCommand *cmd = new TCPCommand();
+
+                        cPacket * cdec = msg->getEncapsulatedPacket();
+                        if(cdec == NULL) {
+                            IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->getControlInfo();
+                            msg->encapsulate(new cPacket(controlInfo->getSrcAddr().str().c_str()));
+                        }
+
                         cmd->setConnId(connId);
                         msg->setControlInfo(cmd);
                         sendToApp(msg);

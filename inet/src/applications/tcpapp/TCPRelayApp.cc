@@ -277,7 +277,8 @@ void TCPRelayApp::sendDown(cMessage *msg)
 
         if((msg->getControlInfo() != NULL))
             msg->removeControlInfo();
-        ssocket->send(msg);
+        if(ssocket != NULL)
+            ssocket->send(msg);
     }
 //    else if(agate == "tcpIn")
 //        send(msg, "tcpOut");
@@ -304,6 +305,52 @@ TCPSocket* TCPRelayApp::getSendTCPSocket(const char * srcIPAddr) {
     }
 }
 
+bool TCPRelayApp::needToBlock() {
+    //conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000
+    return false;
+}
+
+uint32 TCPRelayApp::getNextRate() {
+    TCPConnection *conn1 = NULL;
+    uint32 rate = 0;
+
+    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+
+    ForwardingMap::iterator it;
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        if(!reverse)
+            conn1 = tcp2->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+        else
+            conn1 = tcp->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+
+        if(conn1 != NULL) {
+            TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+            rate += state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
+        } else
+            return 0;
+    }
+    return rate;
+}
+
+const char * TCPRelayApp::getFirstSender(cPacket * pkt) {
+    const char * srcIPAddr;
+    cPacket * cdec = pkt->getEncapsulatedPacket();
+    if(cdec != NULL)
+        srcIPAddr = cdec->getName();
+    else {
+        IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)pkt->getControlInfo();
+        srcIPAddr = controlInfo->getSrcAddr().str().c_str();
+    }
+    return srcIPAddr;
+}
+
+void TCPRelayApp::encapsulateSender(cPacket * pkt, IPvXAddress srcAddr) {
+    cPacket * cdec = pkt->getEncapsulatedPacket();
+    if(cdec == NULL) {
+        pkt->encapsulate(new cPacket(srcAddr.str().c_str()));
+    }
+}
 
 void TCPRelayApp::handleMessage(cMessage *msg)
 {
@@ -344,19 +391,29 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         emit(rcvdPkSignal, pkt);
         bytesRcvd += pkt->getByteLength();
         lastBytesRecv += pkt->getByteLength();
-        IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)pkt->removeControlInfo();
-        IPvXAddress srcAddr = controlInfo->getSrcAddr();
-        pkt->removeControlInfo();
-
-        const char * srcIPAddr;
+//        TCPCommand *controlInfo = (TCPCommand *)pkt->getControlInfo();
+//        IPvXAddress srcAddr = controlInfo->getSrcAddr();
+//
+        std::string srcIPAddr = "";
         cPacket * cdec = pkt->getEncapsulatedPacket();
         if(cdec != NULL)
-            srcIPAddr = cdec->getName();
-        else {
-            srcIPAddr = srcAddr.str().c_str();
-            pkt->encapsulate(new cPacket(srcIPAddr));
-        }
+            srcIPAddr = std::string(cdec->getName());
+//        else {
+//            srcIPAddr = srcAddr.str();
+//            pkt->encapsulate(new cPacket(srcIPAddr.c_str()));
+//        }
 
+        TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+        TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+        TCPConnection *conn1 = NULL;
+//        if(reverse)
+//            conn1 = tcp2->findConnForApp(0, controlInfo->getConnId());
+//        else
+//            conn1 = tcp->findConnForApp(0, controlInfo->getConnId());
+//
+//        srcIPAddr = conn1->remoteAddr.str();
+
+        pkt->removeControlInfo();
 //        ByteArrayMessage *msg2 = new ByteArrayMessage("data1");
 //        unsigned char *ptr = new unsigned char[4];
 //
@@ -373,43 +430,47 @@ void TCPRelayApp::handleMessage(cMessage *msg)
         simtime_t now1 = simTime();
 
         if(now1 - lastCalcInputRate >= interval){
-            TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
-            TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+//            TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+//            TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
             TCPConnection *conn1 = NULL;
-            if(!reverse)
-                conn1 = tcp2->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
-            else
-                conn1 = tcp->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+            TCPSocket * socket = getSendTCPSocket(srcIPAddr.c_str());
 
-            inputRate = (lastBytesRecv) * 8 / (now1 - lastCalcInputRate);
-            lastBytesRecv = 0;
-            lastCalcInputRate = now1;
+            if(socket != NULL) {
+                if(!reverse)
+                    conn1 = tcp2->findConnForApp(0, socket->getConnectionId());
+                else
+                    conn1 = tcp->findConnForApp(0, socket->getConnectionId());
+                if (sendBufferVector)
+                    sendBufferVector->record(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()));
 
-            if (sendBufferVector)
-                sendBufferVector->record(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()));
+                inputRate = (lastBytesRecv) * 8 / (now1 - lastCalcInputRate);
+                lastBytesRecv = 0;
+                lastCalcInputRate = now1;
 
-            if(strcmp(conn1->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
-//                double a = 0;
-//                if(cost == 0)
-//                    a = std::max(0.0, inputRate - state1->lgcc_rate * state1->lgcc_carryingCap);
-//                else
-//                    a = inputRate - state1->lgcc_rate * state1->lgcc_carryingCap;
+                if(strcmp(conn1->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+                    TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+    //                double a = 0;
+    //                if(cost == 0)
+    //                    a = std::max(0.0, inputRate - state1->lgcc_rate * state1->lgcc_carryingCap);
+    //                else
+    //                    a = inputRate - state1->lgcc_rate * state1->lgcc_carryingCap;
 
-//                double backloggedRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) * 8 / interval;
-                double outputRate = (state1->lgcc_rate * state1->lgcc_carryingCap);
-//                outputRate = outputRate - backloggedRate;
-//                if(outputRate <= 0)
-//                    outputRate = 1;
+    //                double backloggedRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) * 8 / interval;
+                    double outputRate = (state1->lgcc_rate * state1->lgcc_carryingCap);
+    //                outputRate = outputRate - backloggedRate;
+    //                if(outputRate <= 0)
+    //                    outputRate = 1;
 
-                cost = std::max(0.0, std::min(1.0, cost + beta * (inputRate - outputRate) / (outputRate)));
+                    cost = std::max(0.0, std::min(1.0, cost + beta * (inputRate - outputRate) / (outputRate)));
 
 
 
-                if (costVector)
-                    costVector->record(cost);
+                    if (costVector)
+                        costVector->record(cost);
 
+                }
             }
+
         }
 
 //        TCPCommand *ind = check_and_cast<TCPCommand *>(pkt->removeControlInfo());
