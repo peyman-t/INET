@@ -38,7 +38,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_phyRate = 10000000000;
     lgcc_carryingCap = lgcc_phyRate;
 //    lgcc_maxWin = 240000; // 40Mbps : 240000;        10Mbps : 60000;
-//    lgcc_rate = 0.01;//2 / (lgcc_maxWin / 1500);
+    lgcc_rate = 0.001;//2 / (lgcc_maxWin / 1500);
     lgcc_load = 0;
     lgcc_calcLoad = 0;
     lgcc_gamma = 0.1;   // 40Mbps : 0.05;
@@ -55,6 +55,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_sch_rate = false;
     interPacketSpace = 0;
     lgcc_pacing = true;
+    weights = "";
 
     for(int i = 0; i < lgcc_winSize; i++) {
         ecnmarked[i] = 0;

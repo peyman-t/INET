@@ -239,11 +239,12 @@ void TCP::handleMessage(cMessage *msg)
                                     dropPBVector->record(1);
                                 } else
                                     dropPBVector->record(0);
-                                conn->getState()->maxRcvBuffer = relay->getNextRate();
-                                if(conn->getState()->maxRcvBuffer < 3000)
-                                    conn->getState()->maxRcvBuffer = 3000;
-
-                                conn->getState()->maxRcvBufferChanged = true;
+                                relay->processRatesAndWeights(conn, tcpseg);
+//                                conn->getState()->maxRcvBuffer = relay->getNextRate();
+//                                if(conn->getState()->maxRcvBuffer < 3000)
+//                                    conn->getState()->maxRcvBuffer = 3000;
+//
+//                                conn->getState()->maxRcvBufferChanged = true;
 
                             } else {
 
@@ -272,9 +273,10 @@ void TCP::handleMessage(cMessage *msg)
 
                         } else {
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-                                conn->getState()->maxRcvBuffer = relay->getNextRate();
-                                if(conn->getState()->maxRcvBuffer < 3000)
-                                    conn->getState()->maxRcvBuffer = 3000;
+                                relay->processRatesAndWeights(conn, tcpseg);
+//                                conn->getState()->maxRcvBuffer = relay->getNextRate();
+//                                if(conn->getState()->maxRcvBuffer < 3000)
+//                                    conn->getState()->maxRcvBuffer = 3000;
                             } else {
                                 if(relay->needToBlock()) {
                                     conn->getState()->maxRcvBuffer = 3000;

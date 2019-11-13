@@ -239,10 +239,12 @@ void TCP2::handleMessage(cMessage *msg)
                                     dropPBVector->record(1);
                                 } else
                                     dropPBVector->record(0);
-                                conn->getState()->maxRcvBuffer = relay->getNextRate();
-                                if(conn->getState()->maxRcvBuffer < 3000)
-                                    conn->getState()->maxRcvBuffer = 3000;
-                                conn->getState()->maxRcvBufferChanged = true;
+
+                                relay->processRatesAndWeights(conn, tcpseg);
+//                                conn->getState()->maxRcvBuffer = relay->getNextRate();
+//                                if(conn->getState()->maxRcvBuffer < 3000)
+//                                    conn->getState()->maxRcvBuffer = 3000;
+//                                conn->getState()->maxRcvBufferChanged = true;
 
                             } else {
 
@@ -271,11 +273,13 @@ void TCP2::handleMessage(cMessage *msg)
 
                         } else {
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-//                                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
-//                                conn->getState()->maxRcvBuffer = state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
-                                conn->getState()->maxRcvBuffer = relay->getNextRate();
-                                if(conn->getState()->maxRcvBuffer < 3000)
-                                    conn->getState()->maxRcvBuffer = 3000;
+                                relay->processRatesAndWeights(conn, tcpseg);
+
+//                                TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn->getState());
+//                                state1->weights = relay->getNextWeights();
+//                                conn->getState()->maxRcvBuffer = relay->getNextRate();
+//                                if(conn->getState()->maxRcvBuffer < 3000)
+//                                    conn->getState()->maxRcvBuffer = 3000;
                             } else {
 //                                if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000) {
                                 if(relay->needToBlock()) {

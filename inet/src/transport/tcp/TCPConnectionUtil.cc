@@ -31,7 +31,7 @@
 #include "TCPSACKRexmitQueue.h"
 #include "TCPReceiveQueue.h"
 #include "TCPAlgorithm.h"
-
+#include "TCPTahoeRenoFamily.h"
 //
 // helper functions
 //
@@ -660,6 +660,11 @@ void TCPConnection::sendAck(bool ecn)
     writeHeaderOptions(tcpseg);
     if(ecn)
         tcpseg->setEceBit(ecn);
+
+    TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(getState());
+    if(state1) {
+        tcpseg->encapsulate(new cPacket(state1->weights.c_str()));
+    }
 
     // send it
     sendToIP(tcpseg);

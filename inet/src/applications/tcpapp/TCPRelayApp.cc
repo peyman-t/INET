@@ -18,6 +18,7 @@
 #include <TCPRelayApp.h>
 
 #include "IPv4ControlInfo.h"
+#include "IPv6ControlInfo.h"
 #include "ByteArrayMessage.h"
 #include "TCPCommand_m.h"
 #include "ModuleAccess.h"
@@ -29,6 +30,7 @@
 #include "TCPConnection.h"
 #include "TCPSendQueue.h"
 #include <TCPTahoeRenoFamily.h>
+#include <iomanip>
 
 Define_Module(TCPRelayApp);
 
@@ -333,6 +335,45 @@ uint32 TCPRelayApp::getNextRate() {
     return rate;
 }
 
+std::string TCPRelayApp::getNextWeights() {
+    TCPConnection *conn1 = NULL;
+    double rate = 0;
+    std::ostringstream weights;
+
+    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+
+    ForwardingMap::iterator it;
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        if(!reverse)
+            conn1 = tcp2->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+        else
+            conn1 = tcp->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+
+        if(conn1 != NULL) {
+            TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+            rate += state1->lgcc_rate * state1->lgcc_carryingCap / 8;//state1->snd_cwnd / state1->minrtt;
+        }
+    }
+
+    weights << std::setprecision(4);
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        if(!reverse)
+            conn1 = tcp2->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+        else
+            conn1 = tcp->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+
+        if(conn1 != NULL) {
+            TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+            double nextWeight = 0;
+            nextWeight = (state1->lgcc_rate * state1->lgcc_carryingCap / 8) / rate;//state1->snd_cwnd / state1->minrtt;
+            weights << it->first << "=" << std::to_string(nextWeight) << ";";
+        }
+    }
+
+    return weights.str();
+}
+
 const char * TCPRelayApp::getFirstSender(cPacket * pkt) {
     const char * srcIPAddr;
     cPacket * cdec = pkt->getEncapsulatedPacket();
@@ -350,6 +391,69 @@ void TCPRelayApp::encapsulateSender(cPacket * pkt, IPvXAddress srcAddr) {
     if(cdec == NULL) {
         pkt->encapsulate(new cPacket(srcAddr.str().c_str()));
     }
+}
+
+void TCPRelayApp::setNextWeights(const char * weights) {
+    int i = 0;
+    weightSum = 0;
+    while(weights[i]) {
+
+        std::string host = "";
+        while(weights[i] != '=') {
+            host += weights[i];
+            i++;
+        }
+        i++;
+        std::string weight = "";
+        while(weights[i] != ';') {
+            weight += weights[i];
+            i++;
+        }
+
+        weightSum += std::atof(weight.c_str());
+
+        WeightsMap::iterator it = weightMap.find(IPvXAddressResolver().resolve(host.c_str()));
+        if(it != weightMap.end())
+            it->second = std::atof(weight.c_str());
+
+        i++;
+    }
+}
+
+void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg) {
+    IPvXAddress srcAddr;
+
+    if (dynamic_cast<IPv4ControlInfo *>(tcpseg->getControlInfo()) != NULL)
+    {
+        IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->getControlInfo();
+        srcAddr = controlInfo->getSrcAddr();
+    }
+    else if (dynamic_cast<IPv6ControlInfo *>(tcpseg->getControlInfo()) != NULL)
+    {
+        IPv6ControlInfo *controlInfo = (IPv6ControlInfo *)tcpseg->getControlInfo();
+        srcAddr = controlInfo->getSrcAddr();
+    }
+
+    ForwardingMap::iterator it;
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        if(it->second->getRemoteAddress() == srcAddr) {
+            std::string nextWeights = "";
+            cPacket * cdec = tcpseg->getEncapsulatedPacket();
+            if(cdec != NULL)
+                nextWeights = std::string(cdec->getName());
+
+            setNextWeights(nextWeights.c_str());
+            return;
+        }
+    }
+
+    conn->getState()->maxRcvBuffer = getNextRate();
+    TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn->getState());
+    state1->weights = getNextWeights();
+    if(conn->getState()->maxRcvBuffer < 3000)
+        conn->getState()->maxRcvBuffer = 3000;
+    conn->getState()->maxRcvBufferChanged = true;
+
 }
 
 void TCPRelayApp::handleMessage(cMessage *msg)

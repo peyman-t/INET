@@ -20,6 +20,8 @@
 #include "ILifecycle.h"
 #include "NodeStatus.h"
 #include "TCPSocket.h"
+#include "TCPSegment.h"
+#include "TCPConnection.h"
 
 /**
  * Accepts any number of incoming connections, and sends back whatever
@@ -81,6 +83,10 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     long getSendQueueSize();
     int getTCPOutGateIndex();
     uint32 getNextRate();
+    std::string getNextWeights();
+    void setNextWeights(const char * weights);
+    void processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg);
+
     bool needToBlock();
     void encapsulateSender(cPacket * pkt, IPvXAddress srcAddr);
     double getMarkingProb(IPvXAddress srcAddr);

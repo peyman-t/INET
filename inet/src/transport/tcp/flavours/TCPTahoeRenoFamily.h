@@ -67,6 +67,7 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     bool lgcc_sch;
     bool lgcc_sch_rate;
     bool lgcc_pacing;
+    std::string weights;
 
     bool ecnnum_pacing;
     simtime_t ecnnum_lastCalcTime;
