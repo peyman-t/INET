@@ -28,6 +28,9 @@
 #include "TCPAlgorithm.h"
 #include "TCPTahoeRenoFamily.h"
 #include "IPv4ControlInfo.h"
+#include <TCPRelayApp.h>
+#include "IPv6ControlInfo.h"
+#include "IPvXAddressResolver.h"
 
 bool TCPConnection::tryFastRoute(TCPSegment *tcpseg)
 {
@@ -617,10 +620,50 @@ TCPEventCode TCPConnection::processSegment1stThru8th(TCPSegment *tcpseg)
                         msg->setKind(TCP_I_DATA);  // TBD currently we never send TCP_I_URGENT_DATA
                         TCPCommand *cmd = new TCPCommand();
 
-                        cPacket * cdec = msg->getEncapsulatedPacket();
-                        if(cdec == NULL) {
-                            IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->getControlInfo();
-                            msg->encapsulate(new cPacket(controlInfo->getSrcAddr().str().c_str()));
+
+                        TCPRelayApp *relay = NULL;
+                        opp_string str("^.relay[");
+                        char buf[10];
+                        sprintf(buf, "%d", appGateIndex);
+                        str = str + buf;
+                        str = str + "]";
+                        if(tcpMain!=NULL)
+                            relay = dynamic_cast<TCPRelayApp *>(tcpMain->getModuleByPath(str.c_str()));// "appOut", appGateIndex);
+                        else
+                            relay = dynamic_cast<TCPRelayApp *>(tcpMain2->getModuleByPath(str.c_str()));// "appOut", appGateIndex);
+
+                        if(relay != NULL) {
+
+                            IPvXAddress srcAddr;
+
+                            if (dynamic_cast<IPv4ControlInfo *>(tcpseg->getControlInfo()) != NULL)
+                            {
+                                IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->getControlInfo();
+                                srcAddr = controlInfo->getSrcAddr();
+                            }
+                            else if (dynamic_cast<IPv6ControlInfo *>(tcpseg->getControlInfo()) != NULL)
+                            {
+                                IPv6ControlInfo *controlInfo = (IPv6ControlInfo *)tcpseg->getControlInfo();
+                                srcAddr = controlInfo->getSrcAddr();
+                            }
+
+                            IPvXAddress oSrcAddr = srcAddr;
+
+                            cPacket * cdec = msg->getEncapsulatedPacket();
+                            if(cdec == NULL) {
+                                IPv4ControlInfo *controlInfo = (IPv4ControlInfo *)tcpseg->getControlInfo();
+                                msg->encapsulate(new cPacket(controlInfo->getSrcAddr().str().c_str()));
+                            } else {
+                                std::string srcIPAddr = "";
+                                srcIPAddr = std::string(cdec->getName());
+                                oSrcAddr = IPvXAddressResolver().resolve(srcIPAddr.c_str());
+                            }
+
+                            double d = relay->getMarkingProb(oSrcAddr);
+                            if(dblrand() < d)
+                                tcpseg->setEcnBit(true);
+
+                            getState()->ecn = tcpseg->getEcnBit();
                         }
 
                         cmd->setConnId(connId);

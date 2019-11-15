@@ -28,6 +28,7 @@
 #include "TCPConnection.h"
 #include "TCPSegment.h"
 #include "TCPCommand_m.h"
+#include "IPvXAddressResolver.h"
 
 #ifdef WITH_IPv4
 #include "ICMPMessage_m.h"
@@ -232,14 +233,34 @@ void TCP::handleMessage(cMessage *msg)
 
                             if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
                                 // ECN mark
-//                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
-                                double d = relay->getMarkingProb(srcAddr);
-                                if(dblrand() < d) {
-                                    tcpseg->setEcnBit(true);
+                                relay->processRatesAndWeights(conn, tcpseg);
+
+                                if(tcpseg->getEcnBit()) {
                                     dropPBVector->record(1);
                                 } else
                                     dropPBVector->record(0);
-                                relay->processRatesAndWeights(conn, tcpseg);
+//                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
+//                                IPvXAddress oSrcAddr = srcAddr;
+//                                if(tcpseg->getPayloadLength() > 0) {
+//                                    TCPPayloadMessage *m = &tcpseg->getPayload(0);
+//                                    cPacket *cp = m->msg;
+//                                    std::string srcIPAddr = "";
+//                                    if(cp != NULL) {
+//                                        cPacket * cdec = cp->getEncapsulatedPacket();
+//                                        if(cdec != NULL) {
+//                                            srcIPAddr = std::string(cdec->getName());
+//                                            oSrcAddr = IPvXAddressResolver().resolve(srcIPAddr.c_str());
+//                                        }
+//                                    }
+//                                }
+//                                double d = relay->getMarkingProb(oSrcAddr);
+//                                if(dblrand() < d) {
+//                                    tcpseg->setEcnBit(true);
+//                                    dropPBVector->record(1);
+//                                } else
+//                                    dropPBVector->record(0);
+//                                relay->processRatesAndWeights(conn, tcpseg);
+
 //                                conn->getState()->maxRcvBuffer = relay->getNextRate();
 //                                if(conn->getState()->maxRcvBuffer < 3000)
 //                                    conn->getState()->maxRcvBuffer = 3000;

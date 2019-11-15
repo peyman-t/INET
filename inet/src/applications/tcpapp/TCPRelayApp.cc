@@ -442,7 +442,8 @@ void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg
             if(cdec != NULL)
                 nextWeights = std::string(cdec->getName());
 
-            setNextWeights(nextWeights.c_str());
+            if(nextWeights != "")
+                setNextWeights(nextWeights.c_str());
             return;
         }
     }
@@ -454,6 +455,30 @@ void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg
         conn->getState()->maxRcvBuffer = 3000;
     conn->getState()->maxRcvBufferChanged = true;
 
+}
+
+void TCPRelayApp::processSegment(TCPConnection *conn, TCPSegment *tcpseg) {
+    if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+        processRatesAndWeights(conn, tcpseg);
+//        markPacket(tcpseg);
+
+    } else {
+        if(needToBlock()) {
+            if(weightMap.size() > 1) {
+                double dprob = 0.05;
+                if (dblrand() < dprob) {
+                    delete tcpseg;
+                    tcpseg = NULL;
+                }
+            } else {
+                conn->getState()->maxRcvBuffer = 3000;
+                conn->getState()->maxRcvBufferChanged = true;
+            }
+        } else {
+            conn->getState()->maxRcvBuffer = 10000000;
+            conn->getState()->maxRcvBufferChanged = true;
+        }
+    }
 }
 
 void TCPRelayApp::handleMessage(cMessage *msg)
@@ -641,7 +666,7 @@ bool TCPRelayApp::handleOperationStage(LifecycleOperation *operation, int stage,
 
 double TCPRelayApp::getMarkingProb(IPvXAddress srcAddr) {
     if(weightMap.empty())
-        return cost;
+        return 0;
     else {
         WeightsMap::iterator it;
         it = weightMap.find(srcAddr);
