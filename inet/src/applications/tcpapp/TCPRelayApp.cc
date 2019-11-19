@@ -70,10 +70,12 @@ void TCPRelayApp::initialize(int stage)
         lastCalcInputRate = 0;
         cost = 0;
         inputRate = 0;
+        sendQueueThreshold = par("sendQueueThreshold");
         WATCH(bytesRcvd);
         WATCH(bytesSent);
 
         costVector = new cOutVector("costVector");
+        markingVector = new cOutVector("markingVector");
         sendBufferVector = new cOutVector("sendBufferVector");
 
         socket.setOutputGate(gate(outGate)); //"tcpOut"
@@ -287,8 +289,20 @@ void TCPRelayApp::sendDown(cMessage *msg)
 
 }
 
-long TCPRelayApp::getSendQueueSize() {
-    return sendQueueSize;
+long TCPRelayApp::getSendQueueSize(const char * srcIPAddr) {
+    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+
+    TCPConnection *conn1 = NULL;
+    if(!reverse)
+       conn1 = tcp2->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+   else
+       conn1 = tcp->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+
+    if(conn1 != NULL)
+        return conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq());
+    else
+        return 0;
 }
 
 
@@ -665,16 +679,25 @@ bool TCPRelayApp::handleOperationStage(LifecycleOperation *operation, int stage,
 }
 
 double TCPRelayApp::getMarkingProb(IPvXAddress srcAddr) {
+    double mp = 0;
+
     if(weightMap.empty())
-        return 0;
+        mp = 0;
     else {
         WeightsMap::iterator it;
         it = weightMap.find(srcAddr);
         if(it != weightMap.end())
-            return 1 - (it->second / weightSum);
+            mp = 1 - (it->second / weightSum);
         else
-            return 0;
+            mp = 0;
     }
+
+    if(getSendQueueSize(srcAddr.str().c_str()) > sendQueueThreshold)
+        mp += ((double)getSendQueueSize(srcAddr.str().c_str()) - sendQueueThreshold) / (10 * sendQueueThreshold);
+
+    markingVector->record(mp);
+
+    return mp;
 }
 
 void TCPRelayApp::finish()
@@ -687,6 +710,7 @@ void TCPRelayApp::finish()
         delete it->second;
 
     delete costVector;
+    delete markingVector;
     delete sendBufferVector;
 }
 

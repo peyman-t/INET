@@ -226,91 +226,94 @@ void TCP::handleMessage(cMessage *msg)
 //                        conn1 = tcp2->findConnForApp(conn->appGateIndex, socket->getConnectionId());
 //                    if(conn1 != NULL) {
 //                        if(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 10000000) {
-                        if(par("lgccAggregated")) {
+//                        if(par("lgccAggregated")) {
                             // pushback
                             // conn->getState()->maxRcvBuffer = 1500;
 
 
-                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-                                // ECN mark
-                                relay->processRatesAndWeights(conn, tcpseg);
-
-                                if(tcpseg->getEcnBit()) {
-                                    dropPBVector->record(1);
-                                } else
-                                    dropPBVector->record(0);
-//                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
-//                                IPvXAddress oSrcAddr = srcAddr;
-//                                if(tcpseg->getPayloadLength() > 0) {
-//                                    TCPPayloadMessage *m = &tcpseg->getPayload(0);
-//                                    cPacket *cp = m->msg;
-//                                    std::string srcIPAddr = "";
-//                                    if(cp != NULL) {
-//                                        cPacket * cdec = cp->getEncapsulatedPacket();
-//                                        if(cdec != NULL) {
-//                                            srcIPAddr = std::string(cdec->getName());
-//                                            oSrcAddr = IPvXAddressResolver().resolve(srcIPAddr.c_str());
-//                                        }
-//                                    }
-//                                }
-//                                double d = relay->getMarkingProb(oSrcAddr);
-//                                if(dblrand() < d) {
-//                                    tcpseg->setEcnBit(true);
+//                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+//                                // ECN mark
+//                                relay->processRatesAndWeights(conn, tcpseg);
+////                                relay->markPacket(tcpseg);
+//
+//                                if(tcpseg->getEcnBit()) {
 //                                    dropPBVector->record(1);
 //                                } else
 //                                    dropPBVector->record(0);
-//                                relay->processRatesAndWeights(conn, tcpseg);
-
-//                                conn->getState()->maxRcvBuffer = relay->getNextRate();
-//                                if(conn->getState()->maxRcvBuffer < 3000)
-//                                    conn->getState()->maxRcvBuffer = 3000;
+////                                double d = (double)(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq())) / 150000;
+////                                IPvXAddress oSrcAddr = srcAddr;
+////                                if(tcpseg->getPayloadLength() > 0) {
+////                                    TCPPayloadMessage *m = &tcpseg->getPayload(0);
+////                                    cPacket *cp = m->msg;
+////                                    std::string srcIPAddr = "";
+////                                    if(cp != NULL) {
+////                                        cPacket * cdec = cp->getEncapsulatedPacket();
+////                                        if(cdec != NULL) {
+////                                            srcIPAddr = std::string(cdec->getName());
+////                                            oSrcAddr = IPvXAddressResolver().resolve(srcIPAddr.c_str());
+////                                        }
+////                                    }
+////                                }
+////                                double d = relay->getMarkingProb(oSrcAddr);
+////                                if(dblrand() < d) {
+////                                    tcpseg->setEcnBit(true);
+////                                    dropPBVector->record(1);
+////                                } else
+////                                    dropPBVector->record(0);
+////                                relay->processRatesAndWeights(conn, tcpseg);
 //
-//                                conn->getState()->maxRcvBufferChanged = true;
+////                                conn->getState()->maxRcvBuffer = relay->getNextRate();
+////                                if(conn->getState()->maxRcvBuffer < 3000)
+////                                    conn->getState()->maxRcvBuffer = 3000;
+////
+////                                conn->getState()->maxRcvBufferChanged = true;
+//
+//                            } else {
+//
+//                                // drop
+//                                if(relay->needToBlock()) {
+//                                    double dprob = par("param5");
+//                                    if (dblrand() < dprob) {
+//                                        dropPBVector->record(tcpseg->getSequenceNo());
+//                                        delete tcpseg;
+//                                        tcpseg = NULL;
+//                                    }
+//                                }
+////                                else
+////                                    dropPBVector->record(0);
+////                                conn->getState()->maxRcvBuffer = 3000;
+////                                conn->getState()->maxRcvBufferChanged = true;
+//                            }
+//
+//
+//                            if(tcpseg) {
+//                                conn->getState()->ecn = tcpseg->getEcnBit();
+//                                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+//                                if (!ret)
+//                                    removeConnection(conn);
+//                            }
 
-                            } else {
-
-                                // drop
-                                if(relay->needToBlock()) {
-                                    double dprob = par("param5");
-                                    if (dblrand() < dprob) {
-                                        dropPBVector->record(tcpseg->getSequenceNo());
-                                        delete tcpseg;
-                                        tcpseg = NULL;
-                                    }
-                                }
-//                                else
-//                                    dropPBVector->record(0);
-//                                conn->getState()->maxRcvBuffer = 3000;
-//                                conn->getState()->maxRcvBufferChanged = true;
-                            }
-
-
-                            if(tcpseg) {
-                                conn->getState()->ecn = tcpseg->getEcnBit();
-                                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
-                                if (!ret)
-                                    removeConnection(conn);
-                            }
-
-                        } else {
-                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-                                relay->processRatesAndWeights(conn, tcpseg);
-//                                conn->getState()->maxRcvBuffer = relay->getNextRate();
-//                                if(conn->getState()->maxRcvBuffer < 3000)
+//                        } else
+//                        {
+                    relay->processRatesAndWeights(conn, tcpseg);
+//                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+//                                relay->processRatesAndWeights(conn, tcpseg);
+////                                conn->getState()->maxRcvBuffer = relay->getNextRate();
+////                                if(conn->getState()->maxRcvBuffer < 3000)
+////                                    conn->getState()->maxRcvBuffer = 3000;
+//                            } else {
+//                                if(relay->needToBlock()) {
 //                                    conn->getState()->maxRcvBuffer = 3000;
-                            } else {
-                                if(relay->needToBlock()) {
-                                    conn->getState()->maxRcvBuffer = 3000;
-                                } else
-                                    conn->getState()->maxRcvBuffer = 10000000;
-                            }
-                            conn->getState()->maxRcvBufferChanged = true;
-                            conn->getState()->ecn = tcpseg->getEcnBit();
-                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
-                            if (!ret)
-                                removeConnection(conn);
-                        }
-                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
+//                                } else
+//                                    conn->getState()->maxRcvBuffer = 10000000;
+//                            }
+//                            conn->getState()->maxRcvBufferChanged = true;
+////                            conn->getState()->ecn = tcpseg->getEcnBit();
+////                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+////                            if (!ret)
+////                                removeConnection(conn);
+////                        }
+//                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
 //                    } else {
 //                        conn->getState()->maxRcvBuffer = 10000000;
 //                        conn->getState()->maxRcvBufferChanged = true;
@@ -319,8 +322,13 @@ void TCP::handleMessage(cMessage *msg)
 //                        if (!ret)
 //                            removeConnection(conn);
 //                    }
-                } else {
+                }
+                {
                     conn->getState()->ecn = tcpseg->getEcnBit();
+                    if(tcpseg->getEcnBit())
+                        dropPBVector->record(1);
+                    else
+                        dropPBVector->record(0);
                     bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                     if (!ret)
                         removeConnection(conn);

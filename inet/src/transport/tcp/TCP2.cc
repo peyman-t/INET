@@ -214,68 +214,67 @@ void TCP2::handleMessage(cMessage *msg)
                 str = str + "]";
                 TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
                 if(relay != NULL) {
-                        if(par("lgccAggregated")) {
-//                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-//
-//                                relay->processRatesAndWeights(conn, tcpseg);
-//                                relay->markPacket(tcpseg);
-//
-//                                if(tcpseg->getEcnBit()) {
-//                                    dropPBVector->record(1);
-//                                } else
-//                                    dropPBVector->record(0);
-//
-//                            } else {
-//
-//                                // drop
-//                                if(relay->needToBlock()) {
-//                                    double dprob = par("param5");
-//                                    if (dblrand() < dprob) {
-//                                        dropPBVector->record(tcpseg->getSequenceNo());
-//                                        delete tcpseg;
-//                                        tcpseg = NULL;
-//                                    }
-//                                }
-//                            }
+//                        if(par("lgccAggregated")) {
+////                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+////
+////                                relay->processRatesAndWeights(conn, tcpseg);
+////                                relay->markPacket(tcpseg);
+////
+////                                if(tcpseg->getEcnBit()) {
+////                                    dropPBVector->record(1);
+////                                } else
+////                                    dropPBVector->record(0);
+////
+////                            } else {
+////
+////                                // drop
+////                                if(relay->needToBlock()) {
+////                                    double dprob = par("param5");
+////                                    if (dblrand() < dprob) {
+////                                        dropPBVector->record(tcpseg->getSequenceNo());
+////                                        delete tcpseg;
+////                                        tcpseg = NULL;
+////                                    }
+////                                }
+////                            }
 
                             relay->processRatesAndWeights(conn, tcpseg);
-//                            relay->processSegment(conn, tcpseg);
-                            if(tcpseg) {
-                                conn->getState()->ecn = tcpseg->getEcnBit();
-                                bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
-                                if (!ret)
-                                    removeConnection(conn);
-                            }
+//                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+//                            if (!ret)
+//                                removeConnection(conn);
 
-                        } else {
-                            relay->processRatesAndWeights(conn, tcpseg);
-//                            relay->processSegment(conn, tcpseg);
-
-//                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
-//                                relay->processRatesAndWeights(conn, tcpseg);
 //
-//                            } else {
-//                                if(relay->needToBlock()) {
-//                                    conn->getState()->maxRcvBuffer = 3000;
-//                                } else
-//                                    conn->getState()->maxRcvBuffer = 10000000;
-//                            }
-                            conn->getState()->maxRcvBufferChanged = true;
-                            conn->getState()->ecn = tcpseg->getEcnBit();
-                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
-                            if (!ret)
-                                removeConnection(conn);
-                        }
-                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
-
-
-                } else {
-                    conn->getState()->ecn = tcpseg->getEcnBit();
+//                        } else {
+//                            relay->processRatesAndWeights(conn, tcpseg);
+////                            relay->processSegment(conn, tcpseg);
+//
+////                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+////                                relay->processRatesAndWeights(conn, tcpseg);
+////
+////                            } else {
+////                                if(relay->needToBlock()) {
+////                                    conn->getState()->maxRcvBuffer = 3000;
+////                                } else
+////                                    conn->getState()->maxRcvBuffer = 10000000;
+////                            }
+//                            conn->getState()->maxRcvBufferChanged = true;
+//                            conn->getState()->ecn = tcpseg->getEcnBit();
+//                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+//                            if (!ret)
+//                                removeConnection(conn);
+//                        }
+//                        maxRecvWindowVector->record(conn->getState()->maxRcvBuffer);
+//
+//
+                }
+                conn->getState()->ecn = tcpseg->getEcnBit();
+                if(tcpseg->getEcnBit())
+                    dropPBVector->record(1);
+                else
+                    dropPBVector->record(0);
                     bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                     if (!ret)
                         removeConnection(conn);
-
-                }
                 // Peyman -- pushback -- up to here
             }
             else

@@ -49,6 +49,8 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     long bytesRcvd;
     long bytesSent;
 
+    int sendQueueThreshold;
+
     long sendQueueSize;
 
     bool reverse;
@@ -74,13 +76,14 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     static simsignal_t sentPkSignal;
 
     cOutVector *costVector;
+    cOutVector *markingVector;
     cOutVector *sendBufferVector;
 
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
     TCPSocket* getSendTCPSocket(const char * srcIPAddr);
     const char * getFirstSender(cPacket * pkt);
-    long getSendQueueSize();
+    long getSendQueueSize(const char * srcIPAddr);
     int getTCPOutGateIndex();
     uint32 getNextRate();
     std::string getNextWeights();

@@ -73,6 +73,7 @@ simple TCPRelayApp like ITCPApp
         double echoFactor = default(1);
         double share = default(1);
         bool reverse = default(false);
+        int sendQueueThreshold = default(100000); //Bytes
         double echoDelay @unit(s) = default(0s);
         double interval @unit(s) = default(0.001s);
         double beta = default(0.001);
