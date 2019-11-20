@@ -63,6 +63,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
 
     typedef std::map<IPvXAddress, double> WeightsMap;
     WeightsMap weightMap;
+    WeightsMap weightMap2;
     double weightSum;
 
     typedef std::map<std::string, TCPSocket *> ForwardingMap;
