@@ -423,6 +423,15 @@ std::string TCPRelayApp::getNextWeights() {
     return weights.str();
 }
 
+std::string TCPRelayApp::getNextWeights2() {
+    std::ostringstream weights;
+    WeightsMap::iterator it;
+    for(it = weightMap2.begin(); it != weightMap2.end(); it++) {
+        weights << it->first << "=" << std::to_string(it->second) << ";";
+    }
+    return weights.str();
+}
+
 const char * TCPRelayApp::getFirstSender(cPacket * pkt) {
     const char * srcIPAddr;
     cPacket * cdec = pkt->getEncapsulatedPacket();
@@ -469,6 +478,129 @@ void TCPRelayApp::setNextWeights(const char * weights) {
     }
 }
 
+void TCPRelayApp::setNextWeights2(IPvXAddress senderAddr, const char * weights) {
+
+    if(weightMap2.empty()) {
+        std::string s = getNextWeights();
+
+        int i = 0;
+        const char * weights = s.c_str();
+        while(weights[i]) {
+
+            std::string host = "";
+            while(weights[i] != '=') {
+                host += weights[i];
+                i++;
+            }
+            i++;
+            std::string weight = "";
+            while(weights[i] != ';') {
+                weight += weights[i];
+                i++;
+            }
+
+            WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+            if(it != weightMap2.end()) {
+                it->second = std::atof(weight.c_str());
+            } else {
+                weightMap2.insert(std::pair<IPvXAddress, double>(IPvXAddressResolver().resolve(host.c_str()), std::atof(weight.c_str())));
+            }
+
+            i++;
+        }
+    }
+
+    if(strcmp(weights, "") == 0) {
+        std::string s = getNextWeights();
+
+        int i = 0;
+        const char * weights = s.c_str();
+        while(weights[i]) {
+
+            std::string host = "";
+            while(weights[i] != '=') {
+                host += weights[i];
+                i++;
+            }
+            i++;
+            std::string weight = "";
+            while(weights[i] != ';') {
+                weight += weights[i];
+                i++;
+            }
+
+            TCPSocket * s = getSendTCPSocket(host.c_str());
+            if(senderAddr.str() == s->getRemoteAddress().str()) {
+                WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+                if(it != weightMap2.end()) {
+                    it->second = std::atof(weight.c_str());
+                }
+                break;
+            }
+
+            i++;
+        }
+
+    } else {
+        int i = 0;
+        double weightSum = 0;
+        double weightSum2 = 0;
+        while(weights[i]) {
+
+            std::string host = "";
+            while(weights[i] != '=') {
+                host += weights[i];
+                i++;
+            }
+            i++;
+            std::string weight = "";
+            while(weights[i] != ';') {
+                weight += weights[i];
+                i++;
+            }
+
+            WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+            if(it != weightMap2.end()) {
+                weightSum += std::atof(weight.c_str());
+                weightSum2 += it->second;
+            }
+            i++;
+        }
+        i = 0;
+        while(weights[i]) {
+
+            std::string host = "";
+            while(weights[i] != '=') {
+                host += weights[i];
+                i++;
+            }
+            i++;
+            std::string weight = "";
+            while(weights[i] != ';') {
+                weight += weights[i];
+                i++;
+            }
+
+            WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+            if(it != weightMap2.end()) {
+                it->second = weightSum2 * std::atof(weight.c_str()) / weightSum;
+            }
+            i++;
+        }
+    }
+
+    weightSum = 0;
+    WeightsMap::iterator it;
+    for(it = weightMap.begin(); it != weightMap.end(); it++) {
+        WeightsMap::iterator it2 = weightMap2.find(it->first);
+        if(it2 != weightMap2.end()) {
+            it->second = it2->second;
+        }
+        weightSum += it->second;
+    }
+
+}
+
 void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg) {
     IPvXAddress srcAddr;
 
@@ -491,15 +623,17 @@ void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg
             if(cdec != NULL)
                 nextWeights = std::string(cdec->getName());
 
-            if(nextWeights != "")
-                setNextWeights(nextWeights.c_str());
+//            if(nextWeights != "")
+//                setNextWeights(nextWeights.c_str());
+            setNextWeights2(srcAddr, nextWeights.c_str());
             return;
         }
     }
 
     conn->getState()->maxRcvBuffer = getNextRate();
     TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn->getState());
-    state1->weights = getNextWeights();
+//    state1->weights = getNextWeights();
+    state1->weights = getNextWeights2();
     if(conn->getState()->maxRcvBuffer < 3000)
         conn->getState()->maxRcvBuffer = 3000;
     conn->getState()->maxRcvBufferChanged = true;

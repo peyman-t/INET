@@ -88,7 +88,9 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     int getTCPOutGateIndex();
     uint32 getNextRate();
     std::string getNextWeights();
+    std::string getNextWeights2();
     void setNextWeights(const char * weights);
+    void setNextWeights2(IPvXAddress senderAddr, const char * weights);
     void processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg);
     void processSegment(TCPConnection *conn, TCPSegment *tcpseg);
 
