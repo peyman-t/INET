@@ -61,7 +61,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     char * outGateName = "tcpOut";
     char * outGate2Name = "tcp2Out";
 
-    typedef std::map<IPvXAddress, double> WeightsMap;
+    typedef std::map<std::string, double> WeightsMap;
     WeightsMap weightMap;
     WeightsMap weightMap2;
     double weightSum;
@@ -92,7 +92,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     void setNextWeights(const char * weights);
     void setNextWeights2(IPvXAddress senderAddr, const char * weights);
     void processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg);
-    void processSegment(TCPConnection *conn, TCPSegment *tcpseg);
+    bool processSegment(TCPConnection *conn, TCPSegment *tcpseg);
 
     bool needToBlock();
     void encapsulateSender(cPacket * pkt, IPvXAddress srcAddr);

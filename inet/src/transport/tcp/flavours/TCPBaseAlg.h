@@ -61,6 +61,7 @@ class INET_API TCPBaseAlgStateVariables : public TCPStateVariables
     //@{
     simtime_t srtt;          ///< smoothed round-trip time
     simtime_t minrtt;          ///< min round-trip time
+    simtime_t lastrtt;          ///< min round-trip time
     simtime_t rttvar;        ///< variance of round-trip time
     //@}
 

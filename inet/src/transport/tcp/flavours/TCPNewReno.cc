@@ -354,8 +354,8 @@ void TCPNewReno::receivedDuplicateAck()
             // has left the network."
             state->snd_cwnd += state->snd_mss;
 
-            if (cwndVector)
-                cwndVector->record(state->snd_cwnd);
+//            if (cwndVector)
+//                cwndVector->record(state->snd_cwnd);
 
             tcpEV << "NewReno on dupAcks > DUPTHRESH(=3): Fast Recovery: inflating cwnd by SMSS, new cwnd=" << state->snd_cwnd << "\n";
 

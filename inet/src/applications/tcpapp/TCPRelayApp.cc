@@ -32,6 +32,7 @@
 #include <TCPTahoeRenoFamily.h>
 #include <iomanip>
 #include <algorithm>
+#include "PPP.h"
 
 Define_Module(TCPRelayApp);
 
@@ -114,7 +115,7 @@ void TCPRelayApp::initialize(int stage)
             }
 
             weightSum += std::atof(weight.c_str());
-            weightMap.insert(std::pair<IPvXAddress, double>(IPvXAddressResolver().resolve(host.c_str()), std::atof(weight.c_str())));
+            weightMap.insert(std::pair<std::string, double>(IPvXAddressResolver().resolve(host.c_str()).str(), std::atof(weight.c_str())));
 
             i++;
         }
@@ -166,6 +167,8 @@ void TCPRelayApp::initialize(int stage)
             }
             if(ssocket == NULL) {
                 ssocket = new TCPSocket();
+                // we need a new connId if this is not the first connection
+                ssocket->renewSocket();
                 ssocket->readDataTransferModePar(*this);
                 ssocket->bind(*localAddress ? IPvXAddressResolver().resolve(localAddress) : IPvXAddress(), localPort);
                 ssocket->setCallbackObject(this);
@@ -177,8 +180,6 @@ void TCPRelayApp::initialize(int stage)
                 else
                     ssocket->setDataTransferMode(TCP_TRANSFER_BYTECOUNT);
                 ssocket->setOutputGate(gate(outGate2)); //"tcp2Out"
-                // we need a new connId if this is not the first connection
-                ssocket->renewSocket();
                 IPvXAddress destination;
                 IPvXAddressResolver().tryResolve(dst.c_str(), destination);
 
@@ -188,7 +189,8 @@ void TCPRelayApp::initialize(int stage)
                     ssocket->connect(destination, std::atoi(port.c_str()));
                 }
             }
-            src = IPvXAddressResolver().resolve(src.c_str()).str();
+            if(src != "*")
+                src = IPvXAddressResolver().resolve(src.c_str()).str();
             forwardingMap.insert(std::pair<std::string, TCPSocket *>(src, ssocket));
 
             i++;
@@ -308,10 +310,11 @@ long TCPRelayApp::getSendQueueSize(const char * srcIPAddr) {
     TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
 
     TCPConnection *conn1 = NULL;
+    TCPSocket *s = getSendTCPSocket(srcIPAddr);
     if(!reverse)
-       conn1 = tcp2->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+       conn1 = tcp2->findConnForApp(getIndex(), s->getConnectionId());
    else
-       conn1 = tcp->findConnForApp(0, getSendTCPSocket(srcIPAddr)->getConnectionId());
+       conn1 = tcp->findConnForApp(getIndex(), s->getConnectionId());
 
     if(conn1 != NULL)
         return conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq());
@@ -336,7 +339,8 @@ TCPSocket* TCPRelayApp::getSendTCPSocket(const char * srcIPAddr) {
 }
 
 bool TCPRelayApp::needToBlock() {
-    //conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) > 100000
+    if(getSendQueueSize("*") > sendQueueThreshold)
+        return true;
     return false;
 }
 
@@ -351,10 +355,11 @@ uint32 TCPRelayApp::getNextRate() {
 
     ForwardingMap::iterator it;
     for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        TCPSocket *s = getSendTCPSocket(it->first.c_str());
         if(!reverse)
-            conn1 = tcp2->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+            conn1 = tcp2->findConnForApp(getIndex(), s->getConnectionId());
         else
-            conn1 = tcp->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+            conn1 = tcp->findConnForApp(getIndex(), s->getConnectionId());
 
 
         auto lit = std::find(l.begin(), l.end(), conn1);
@@ -365,7 +370,7 @@ uint32 TCPRelayApp::getNextRate() {
 
         if(conn1 != NULL) {
             TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
-            double connRate = state1->lgcc_rate * state1->lgcc_carryingCap / 8;
+            double connRate = state1->lgcc_rate / 8; // state1->lgcc_rate * state1->lgcc_carryingCap / 8;
 //            double sendBufferRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) * 8 / state1->minrtt;
 //            if(sendBufferRate < connRate)
 //                connRate = sendBufferRate;
@@ -386,14 +391,15 @@ std::string TCPRelayApp::getNextWeights() {
 
     ForwardingMap::iterator it;
     for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        TCPSocket *s = getSendTCPSocket(it->first.c_str());
         if(!reverse)
-            conn1 = tcp2->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+            conn1 = tcp2->findConnForApp(getIndex(), s->getConnectionId());
         else
-            conn1 = tcp->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+            conn1 = tcp->findConnForApp(getIndex(), s->getConnectionId());
 
         if(conn1 != NULL) {
             TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
-            double connRate = state1->lgcc_rate * state1->lgcc_carryingCap / 8;
+            double connRate = state1->lgcc_rate / 8; // state1->lgcc_rate * state1->lgcc_carryingCap / 8;
 //            double sendBufferRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) / state1->minrtt;
 //            if(sendBufferRate < connRate && sendBufferRate != 0)
 //                connRate = sendBufferRate;
@@ -403,15 +409,16 @@ std::string TCPRelayApp::getNextWeights() {
 
     weights << std::setprecision(4);
     for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        TCPSocket *s = getSendTCPSocket(it->first.c_str());
         if(!reverse)
-            conn1 = tcp2->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+            conn1 = tcp2->findConnForApp(getIndex(), s->getConnectionId());
         else
-            conn1 = tcp->findConnForApp(0, getSendTCPSocket(it->first.c_str())->getConnectionId());
+            conn1 = tcp->findConnForApp(getIndex(), s->getConnectionId());
 
         if(conn1 != NULL) {
             TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
             double nextWeight = 0;
-            double connRate = state1->lgcc_rate * state1->lgcc_carryingCap / 8;
+            double connRate = state1->lgcc_rate / 8; // state1->lgcc_rate * state1->lgcc_carryingCap / 8;
 //            double sendBufferRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) / state1->minrtt;
 //            if(sendBufferRate < connRate && sendBufferRate != 0)
 //                connRate = sendBufferRate;
@@ -468,7 +475,8 @@ void TCPRelayApp::setNextWeights(const char * weights) {
             i++;
         }
 
-        WeightsMap::iterator it = weightMap.find(IPvXAddressResolver().resolve(host.c_str()));
+        WeightsMap::iterator it;
+        it = weightMap2.find(host);
         if(it != weightMap.end()) {
             it->second = std::atof(weight.c_str());
             weightSum += std::atof(weight.c_str());
@@ -499,11 +507,12 @@ void TCPRelayApp::setNextWeights2(IPvXAddress senderAddr, const char * weights) 
                 i++;
             }
 
-            WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+            WeightsMap::iterator it;
+            it = weightMap2.find(host);
             if(it != weightMap2.end()) {
                 it->second = std::atof(weight.c_str());
             } else {
-                weightMap2.insert(std::pair<IPvXAddress, double>(IPvXAddressResolver().resolve(host.c_str()), std::atof(weight.c_str())));
+                weightMap2.insert(std::pair<std::string, double>(host, std::atof(weight.c_str())));
             }
 
             i++;
@@ -531,7 +540,7 @@ void TCPRelayApp::setNextWeights2(IPvXAddress senderAddr, const char * weights) 
 
             TCPSocket * s = getSendTCPSocket(host.c_str());
             if(senderAddr.str() == s->getRemoteAddress().str()) {
-                WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+                WeightsMap::iterator it = weightMap2.find(host);
                 if(it != weightMap2.end()) {
                     it->second = std::atof(weight.c_str());
                 }
@@ -559,7 +568,7 @@ void TCPRelayApp::setNextWeights2(IPvXAddress senderAddr, const char * weights) 
                 i++;
             }
 
-            WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+            WeightsMap::iterator it = weightMap2.find(host);
             if(it != weightMap2.end()) {
                 weightSum += std::atof(weight.c_str());
                 weightSum2 += it->second;
@@ -581,7 +590,7 @@ void TCPRelayApp::setNextWeights2(IPvXAddress senderAddr, const char * weights) 
                 i++;
             }
 
-            WeightsMap::iterator it = weightMap2.find(IPvXAddressResolver().resolve(host.c_str()));
+            WeightsMap::iterator it = weightMap2.find(host);
             if(it != weightMap2.end()) {
                 it->second = weightSum2 * std::atof(weight.c_str()) / weightSum;
             }
@@ -640,7 +649,7 @@ void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg
 
 }
 
-void TCPRelayApp::processSegment(TCPConnection *conn, TCPSegment *tcpseg) {
+bool TCPRelayApp::processSegment(TCPConnection *conn, TCPSegment *tcpseg) {
     if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
         processRatesAndWeights(conn, tcpseg);
 //        markPacket(tcpseg);
@@ -650,8 +659,7 @@ void TCPRelayApp::processSegment(TCPConnection *conn, TCPSegment *tcpseg) {
             if(weightMap.size() > 1) {
                 double dprob = 0.05;
                 if (dblrand() < dprob) {
-                    delete tcpseg;
-                    tcpseg = NULL;
+                    return true;
                 }
             } else {
                 conn->getState()->maxRcvBuffer = 3000;
@@ -662,6 +670,7 @@ void TCPRelayApp::processSegment(TCPConnection *conn, TCPSegment *tcpseg) {
             conn->getState()->maxRcvBufferChanged = true;
         }
     }
+    return false;
 }
 
 void TCPRelayApp::handleMessage(cMessage *msg)
@@ -749,9 +758,9 @@ void TCPRelayApp::handleMessage(cMessage *msg)
 
             if(socket != NULL) {
                 if(!reverse)
-                    conn1 = tcp2->findConnForApp(0, socket->getConnectionId());
+                    conn1 = tcp2->findConnForApp(getIndex(), socket->getConnectionId());
                 else
-                    conn1 = tcp->findConnForApp(0, socket->getConnectionId());
+                    conn1 = tcp->findConnForApp(getIndex(), socket->getConnectionId());
                 if (sendBufferVector)
                     sendBufferVector->record(conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()));
 
@@ -768,7 +777,7 @@ void TCPRelayApp::handleMessage(cMessage *msg)
     //                    a = inputRate - state1->lgcc_rate * state1->lgcc_carryingCap;
 
     //                double backloggedRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) * 8 / interval;
-                    double outputRate = (state1->lgcc_rate * state1->lgcc_carryingCap);
+                    double outputRate = state1->lgcc_rate; // (state1->lgcc_rate * state1->lgcc_carryingCap);
     //                outputRate = outputRate - backloggedRate;
     //                if(outputRate <= 0)
     //                    outputRate = 1;
@@ -822,6 +831,21 @@ void TCPRelayApp::handleMessage(cMessage *msg)
 //    if(conn1 != NULL)
 //        sendQueueSize = (long)(conn1->getSendQueue()->getBytesAvailable(0));
 
+//    simtime_t now = simTime();
+//    simtime_t r1 = 10;
+//    simtime_t r2 = 15;
+//    if(r1 < now && now < r2) {
+//        PPP *ppp = dynamic_cast<PPP *>(getModuleByPath("dumbbellAgg.routerEg.ppp[1].ppp"));
+//        if(ppp != NULL) {
+//            ppp->setDataRate(1000000);
+//        }
+//    } else {
+//        PPP *ppp = dynamic_cast<PPP *>(getModuleByPath("dumbbellAgg.routerEg.ppp[1].ppp"));
+//        if(ppp != NULL) {
+//            ppp->setDataRate(10000000);
+//        }
+//    }
+
     if (ev.isGUI())
     {
         char buf[80];
@@ -854,7 +878,7 @@ double TCPRelayApp::getMarkingProb(IPvXAddress srcAddr) {
         mp = 0;
     else {
         WeightsMap::iterator it;
-        it = weightMap.find(srcAddr);
+        it = weightMap.find(srcAddr.str());
         if(it != weightMap.end())
             mp = 1 - (it->second / weightSum);
         else

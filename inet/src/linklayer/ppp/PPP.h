@@ -50,6 +50,8 @@ class INET_API PPP : public MACBase, public cListener
 
     std::string oldConnColor;
 
+    double normalRate;
+
     // statistics
     long numSent;
     long numRcvdOK;
@@ -86,6 +88,9 @@ class INET_API PPP : public MACBase, public cListener
   public:
     PPP();
     virtual ~PPP();
+
+    void setDataRate(double rate);
+    double getDataRate();
 
   protected:
     virtual int numInitStages() const { return 4; }

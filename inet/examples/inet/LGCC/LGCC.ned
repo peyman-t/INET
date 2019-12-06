@@ -25,6 +25,8 @@ network dumbbellAgg
         double ldelay @unit(s) = default(0.01s);
         double ldatarate @unit(bps) = default(10Mbps); // bits per second; 0=infinite
         
+        double mdatarate @unit(bps) = default(ldatarate);
+        
     types:
         channel SlowP extends DatarateChannel
         {
@@ -101,7 +103,7 @@ network dumbbellAgg
         routerIng.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client14.pppg++;
         routerIng.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client15.pppg++;
 
-        routerIng.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+        routerIng.pppg++ <--> NormalP {  delay = ldelay; datarate = mdatarate; } <--> routerEg.pppg++;
 
         routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client21.pppg++;
         routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client22.pppg++;

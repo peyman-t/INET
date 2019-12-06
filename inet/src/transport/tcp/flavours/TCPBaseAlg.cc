@@ -63,6 +63,7 @@ TCPBaseAlgStateVariables::TCPBaseAlgStateVariables()
     // will yield rto = 3s initially.
     srtt = 0;
     minrtt = 1;
+    lastrtt = 0;
     rttvar = 3.0 / 4.0;
 
     numRtos = 0;
@@ -434,6 +435,7 @@ void TCPBaseAlg::rttMeasurementComplete(simtime_t tSent, simtime_t tAcked)
     const double g = 0.125; // 1 / 8; (1 - alpha) where alpha == 7 / 8;
     simtime_t newRTT = tAcked - tSent;
 
+    state->lastrtt = newRTT;
     if(newRTT < state->minrtt)
         state->minrtt = newRTT;
 

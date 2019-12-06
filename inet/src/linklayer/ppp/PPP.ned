@@ -50,6 +50,12 @@ simple PPP
         string queueModule = default("");  // name of external (QoS,RED,etc) queue module
         int mtu @unit("B") = default(4470B);
         @display("i=block/rxtx");
+        
+        double tLow @unit(s) = default(10s);
+        double tNormal @unit(s) = default(10s);
+        double lowDatarate @unit(bps) = default(10Mbps);
+        
+        
 
         @signal[txState](type=long);    // 1:transmit, 0:idle
         @signal[rxPkOk](type=PPPFrame);

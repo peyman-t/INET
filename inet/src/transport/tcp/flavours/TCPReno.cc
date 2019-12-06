@@ -117,190 +117,7 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
     }
     else
     {
-//---------------LGCC
-//        state->dctcp_total++;
-//        if(state->ece)
-//            state->dctcp_marked++;
-//
-//        simtime_t now1 = simTime();
-//
-//        if((now1 - state->dctcp_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
-//            if(state->lgcc_cntr == 0) {
-//                state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
-//            }
-//
-//            for(int i = 0; i < state->lgcc_winSize - 1; i++) {
-//                state->ecnmarked[i] = state->ecnmarked[i + 1];
-//                state->total[i] = state->total[i + 1];
-//            }
-//            state->ecnmarked[state->lgcc_winSize - 1] = state->dctcp_marked;
-//            state->total[state->lgcc_winSize - 1] =         state->dctcp_total;
-//
-//            double sumECN = 0, sumTotal = 0;
-//            for(int i = 0; i < state->lgcc_winSize; i++) {
-//                sumECN +=  state->ecnmarked[i];
-//                sumTotal +=  state->total[i];
-//            }
-//            state->lgcc_calcLoad = sumECN / sumTotal;
-////            state->lgcc_calcLoad = state->lgcc_gamma * (state->dctcp_marked / state->dctcp_total) + (1 - state->lgcc_gamma) * state->lgcc_calcLoad;
-//            if (calcLoadVector)
-//                calcLoadVector->record(state->lgcc_calcLoad);
-//
-//            state->lgcc_load = (state->ecnmarked[state->lgcc_winSize - 1]) /
-//                    (state->total[state->lgcc_winSize - 1]);
-////            state->lgcc_load = (state->ecnmarked[state->lgcc_winSize - 1] + state->ecnmarked[state->lgcc_winSize - 2]) /
-////                    (state->total[state->lgcc_winSize - 1] + state->total[state->lgcc_winSize - 2]);
-//            if (loadVector)
-//                loadVector->record(state->lgcc_load);
-//
-//            double alphaTemp = state->lgcc_r;
-//            bool setBack = false;
-//
-//            double expRate = (1 - state->lgcc_calcLoad);
-//            if(state->lgcc_rate < expRate - 0.015 && expRate < 1) { //0.015
-//                state->lgcc_r = ((expRate) - state->lgcc_rate) * 6.66;//2.5
-//            } else if(state->lgcc_rate > expRate + 0.015) {
-//                if((1 - state->lgcc_rate - state->lgcc_load) < 0)
-//                {
-//                    state->lgcc_r = (state->lgcc_rate - (expRate)) * 6.66;//2.5
-//                    setBack = true;
-//                }
-//            } else if(expRate < 1)
-//                state->lgcc_r = state->lgcc_rConv;
-//
-//            state->lgcc_r = std::max(std::min(state->lgcc_r, state->lgcc_rInit), state->lgcc_rConv);
-//
-//            if(state->lgcc_cntr <= 5) { // state->lgcc_winSize
-//                if(state->dctcp_marked || state->lgcc_fnem) {
-//                    state->lgcc_load = state->lgcc_calcLoad;
-//                    state->lgcc_fnem = true;
-//                } else {
-//                    state->lgcc_load = 0;
-//                }
-//                state->lgcc_r = state->lgcc_rInit;
-//                state->lgcc_cntr++;
-//            }
-////            if(state->lgcc_cntr <= 3) { //state->lgcc_maxWin / 80000
-////                state->lgcc_load = 0;
-////                state->lgcc_r = state->lgcc_rInit;
-////                state->lgcc_cntr++;
-////                if(state->dctcp_marked == state->dctcp_total)
-////                    state->lgcc_fnem = true;
-////            } else if(state->lgcc_cntr <= 6) {
-////                if(state->dctcp_marked == state->dctcp_total && state->lgcc_fnem) {
-////                    state->lgcc_load = state->lgcc_rate;
-////                    state->lgcc_r = state->lgcc_rConv;
-////                }
-////                state->lgcc_cntr++;
-////            }
-//
-////            state->lgcc_r = state->lgcc_rConv;
-//            state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load) + state->lgcc_rate;
-//
-//            uint32 newCwnd = state->lgcc_rate * state->lgcc_phyRate * (double)state->minrtt.dbl() / 8;
-//            if(newCwnd < 2 * state->snd_mss) {
-//                if(newCwnd * 1.5 < 2 * state->snd_mss)
-//                    newCwnd *= 1.5;
-//                else
-//                    newCwnd = 2 * state->snd_mss;
-//                state->lgcc_rate = newCwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
-//            }
-//
-//            state->snd_cwnd = newCwnd;
-//
-//            if (cwndVector)
-//                cwndVector->record(state->snd_cwnd);
-//            if (brVector)
-//                brVector->record(state->lgcc_r);
-//
-//            state->dctcp_lastCalcTime = now1;
-//
-//            if(setBack)
-//                state->lgcc_r = alphaTemp;
-//
-//            state->dctcp_marked = 0;
-//            state->dctcp_total = 0;
-//
-//            double minRTT = (double)state->minrtt.dbl();
-//            double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_phyRate);
-//            state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
-//            if(!state->lgcc_sch) {
-//                conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
-//                state->lgcc_sch = true;
-//            }
-//            if (interPSpaceVector)
-//                interPSpaceVector->record(state->interPacketSpace);
-//        }
-//        return;
-//
-////goto l1;
-//// Works!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-////        updateRate = true;
-////        state->lgcc_cntr++;
-////        if(state->ece) {
-////            if(state->lgcc_cntr > 5 && state->lgcc_fnem)
-////                state->lgcc_load = 0.25 * state->lgcc_load + 0.75 * 1;
-////        } else {
-////            state->lgcc_fnem = true;
-////            state->lgcc_load = 0.25 * state->lgcc_load;
-////        }
-////        if (loadVector)
-////            loadVector->record(state->lgcc_load);
-////
-////        if(updateRate) {//now - state->dctcp_lastCalcTime >= 1 * 0.048 &&
-////            state->lgcc_rate = state->lgcc_rate + state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load);
-////
-////            uint32 newCwnd = state->lgcc_rate * state->lgcc_maxWin;
-////            if(newCwnd < 2 * state->snd_mss) {
-////                if(newCwnd * 1.5 < 2 * state->snd_mss)
-////                    newCwnd *= 1.5;
-////                else
-////                    newCwnd = 2 * state->snd_mss;
-////                state->lgcc_rate = newCwnd / state->lgcc_maxWin;
-////            }
-////            state->snd_cwnd = newCwnd;
-////
-////            if (cwndVector)
-////                cwndVector->record(state->snd_cwnd);
-////        }
-//goto l2;
-//------------------DCTCP
-//l1:
-//        state->dctcp_total++;
-//        if(state->ece)
-//            state->dctcp_marked++;
-//        simtime_t now = simTime();
-//        bool cut = false;
-//
-//        if(now - state->dctcp_lastCalcTime >= state->srtt) {
-//            state->dctcp_alpha = (1 - state->dctcp_gamma) * state->dctcp_alpha + state->dctcp_gamma * (state->dctcp_marked / state->dctcp_total);
-//
-//            if(state->dctcp_marked)
-//                cut = true;
-//
-//            state->dctcp_lastCalcTime = now;
-//            state->dctcp_marked = 0;
-//            state->dctcp_total = 0;
-//
-//        }
-//
-//        if(cut) {
-//            state->snd_cwnd = state->snd_cwnd * (1 - state->dctcp_alpha / 2);
-//
-//            uint32 flight_size = std::min(state->snd_cwnd, state->snd_wnd); // FIXME TODO - Does this formula computes the amount of outstanding data?
-//            state->ssthresh = std::max(3 * flight_size / 4, 2 * state->snd_mss);
-//
-//            if (cwndVector)
-//                cwndVector->record(state->snd_cwnd);
-//        } else
-        {
 
-//LGCC
-//            if(state->dctcp_marked == 0) {
-
-            //
-            // Perform slow start and congestion avoidance.
-            //
             if (state->snd_cwnd < state->ssthresh)
             {
                 tcpEV << "cwnd <= ssthresh: Slow Start: increasing cwnd by one SMSS bytes to ";
@@ -348,9 +165,7 @@ void TCPReno::receivedDataAck(uint32 firstSeqAcked)
 
                 tcpEV << "cwnd > ssthresh: Congestion Avoidance: increasing cwnd linearly, to " << state->snd_cwnd << "\n";
             }
-        }
     }
-l2:
     if (state->sack_enabled && state->lossRecovery)
     {
         // RFC 3517, page 7: "Once a TCP is in the loss recovery phase the following procedure MUST
@@ -450,8 +265,8 @@ void TCPReno::receivedDuplicateAck()
         // "set cwnd to ssthresh plus 3 * SMSS." (RFC 2581)
         state->snd_cwnd = state->ssthresh + 3 * state->snd_mss; // 20051129 (1)
 
-//        if (cwndVector)
-//            cwndVector->record(state->snd_cwnd);
+        if (cwndVector)
+            cwndVector->record(state->snd_cwnd);
 
         tcpEV << " set cwnd=" << state->snd_cwnd << ", ssthresh=" << state->ssthresh << "\n";
 

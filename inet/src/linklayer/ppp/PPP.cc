@@ -126,8 +126,19 @@ void PPP::initialize(int stage)
                 getDisplayString().setTagArg("i", 2, "100");
             }
         }
+
+        normalRate = getDataRate();
+
         updateDisplayString();
     }
+}
+
+void PPP::setDataRate(double rate) {
+    ((cDatarateChannel *)datarateChannel)->setDatarate(rate);
+}
+
+double PPP::getDataRate() {
+    return ((cDatarateChannel *)datarateChannel)->getDatarate();
 }
 
 InterfaceEntry *PPP::createInterfaceEntry()
@@ -383,6 +394,16 @@ void PPP::handleMessage(cMessage *msg)
                 startTransmitting(PK(msg));
             }
         }
+    }
+
+
+    simtime_t now = simTime();
+    simtime_t r1 = par("tLow");
+    simtime_t r2 = par("tNormal");
+    if(r1 < now && now < r2) {
+        setDataRate(par("lowDatarate"));
+    } else {
+        setDataRate(normalRate);
     }
 
     if (ev.isGUI())

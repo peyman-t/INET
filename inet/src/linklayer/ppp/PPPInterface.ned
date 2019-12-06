@@ -38,7 +38,12 @@ module PPPInterface like IWiredNic
         string egressTCType = default(""); // a module type implementing ~ITrafficConditioner for optional traffic conditioning of outgoing traffic
         int numOutputHooks = default(0);
         int numInputHooks = default(0);
-    gates:
+    
+//        double tLow @unit(s) = default(10s);
+//        double tNormal @unit(s) = default(10s);
+//        double lowDatarate @unit(bps) = default(10Mbps);
+        
+        gates:
         input upperLayerIn;
         output upperLayerOut;
         inout phys @labels(PPPFrame);

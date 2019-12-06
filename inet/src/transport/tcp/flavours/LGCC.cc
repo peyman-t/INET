@@ -19,7 +19,10 @@
 #include <algorithm>   // min,max
 #include "LGCC.h"
 #include "TCP.h"
-
+#include "IRoutingTable.h"
+#include "IPv4Route.h"
+#include "InterfaceEntry.h"
+#include "PPP.h"
 
 Register_Class(LGCC);
 
@@ -98,21 +101,43 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     if(state->lgcc_cntr == 0) {
         if(conn->tcpMain != NULL) {
             state->lgcc_phyRate = conn->tcpMain->par("ldatarate");
+            state->lgccPhi1 = conn->tcpMain->par("lgccPhi1");
+            state->lgccPhi2 = conn->tcpMain->par("lgccPhi2");
         } else {
             state->lgcc_phyRate = conn->tcpMain2->par("ldatarate");
+            state->lgccPhi1 = conn->tcpMain2->par("lgccPhi1");
+            state->lgccPhi2 = conn->tcpMain2->par("lgccPhi2");
         }
 //        state->minrtt = 0.000140;
 
-        state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
+//        state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
+        state->lgcc_rate = state->snd_cwnd * 8 / (double)state->minrtt.dbl();//(double)state->srtt.dbl() / 8);//
         if (rateVector)
             rateVector->record(state->lgcc_rate);
     }
+
+    IRoutingTable *rt = NULL;
+    if(conn->tcpMain)
+        rt = dynamic_cast<IRoutingTable *>(conn->tcpMain->getModuleByPath("^.routingTable"));
+    else
+        rt = dynamic_cast<IRoutingTable *>(conn->tcpMain2->getModuleByPath("^.routingTable"));
+    if(rt) {
+        const IPv4Route *re = rt->findBestMatchingRoute(conn->remoteAddr.get4());
+        if (re)
+        {
+            const InterfaceEntry *destIE = re->getInterface();
+            PPP * ppp = dynamic_cast<PPP *>(destIE->getInterfaceModule());
+            double dr = ppp->getDataRate();
+            state->lgcc_phyRate = dr;
+        }
+    }
+
 
     uint32 recvCarryingCap = (state->snd_wnd) * 8;
     if(recvCarryingCap < state->lgcc_phyRate)
         state->lgcc_carryingCap = recvCarryingCap;
     else
-        state->lgcc_carryingCap = state->lgcc_phyRate;
+        state->lgcc_carryingCap = state->lgcc_phyRate * 0.95;
 
 
     simtime_t now1 = simTime();
@@ -142,25 +167,40 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
             (state->total[state->lgcc_winSize - 1]);
     else
         state->lgcc_load = 0;
-//            state->lgcc_load = (state->ecnmarked[state->lgcc_winSize - 1] + state->ecnmarked[state->lgcc_winSize - 2]) /
-//                    (state->total[state->lgcc_winSize - 1] + state->total[state->lgcc_winSize - 2]);
+
     if (loadVector)
         loadVector->record(state->lgcc_load);
+
+    if(state->lgcc_load == 1)
+        state->lgcc_load = 0.991;
+    if(state->lgcc_calcLoad == 1)
+        state->lgcc_calcLoad = 0.991;
 
     double alphaTemp = state->lgcc_r;
     bool setBack = false;
 
-    double expRate = (1 - state->lgcc_calcLoad);
-    if(state->lgcc_rate < expRate - 0.015 && expRate < 1) { //0.015
-        state->lgcc_r = ((expRate) - state->lgcc_rate) * 6.66;//2.5
-    } else if(state->lgcc_rate > expRate + 0.015) {
-        if((1 - state->lgcc_rate - state->lgcc_load) < 0)
+    double expRate = state->lgcc_carryingCap * std::exp(std::log(1 - state->lgcc_calcLoad) * std::log(state->lgccPhi1) / std::log(state->lgccPhi2));
+    if(state->lgcc_rate < expRate - 0.015 * state->lgcc_carryingCap && expRate < state->lgcc_carryingCap) { //0.015
+        state->lgcc_r = ((expRate) - state->lgcc_rate) / state->lgcc_carryingCap;// * 6.66;//2.5
+    } else if(state->lgcc_rate > expRate + 0.015 * state->lgcc_carryingCap) {
+        if((-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) < 0)
         {
-            state->lgcc_r = (state->lgcc_rate - (expRate)) * 6.66;//2.5
+            state->lgcc_r = (state->lgcc_rate - (expRate)) / state->lgcc_carryingCap;// * 6.66;//2.5
             setBack = true;
         }
-    } else if(expRate < 1)
+    } else if(expRate < state->lgcc_carryingCap)
         state->lgcc_r = state->lgcc_rConv;
+//    double expRate = (1 - state->lgcc_calcLoad);
+//    if(state->lgcc_rate < expRate - 0.015 && expRate < 1) { //0.015
+//        state->lgcc_r = ((expRate) - state->lgcc_rate) * 6.66;//2.5
+//    } else if(state->lgcc_rate > expRate + 0.015) {
+//        if((1 - state->lgcc_rate - state->lgcc_load) < 0)
+//        {
+//            state->lgcc_r = (state->lgcc_rate - (expRate)) * 6.66;//2.5
+//            setBack = true;
+//        }
+//    } else if(expRate < 1)
+//        state->lgcc_r = state->lgcc_rConv;
 
     state->lgcc_r = std::max(std::min(state->lgcc_r, state->lgcc_rInit), state->lgcc_rConv);
 
@@ -174,48 +214,47 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
         state->lgcc_r = state->lgcc_rInit;
         state->lgcc_cntr++;
     }
-//            if(state->lgcc_cntr <= 3) { //state->lgcc_maxWin / 80000
-//                state->lgcc_load = 0;
-//                state->lgcc_r = state->lgcc_rInit;
-//                state->lgcc_cntr++;
-//                if(state->dctcp_marked == state->dctcp_total)
-//                    state->lgcc_fnem = true;
-//            } else if(state->lgcc_cntr <= 6) {
-//                if(state->dctcp_marked == state->dctcp_total && state->lgcc_fnem) {
-//                    state->lgcc_load = state->lgcc_rate;
-//                    state->lgcc_r = state->lgcc_rConv;
-//                }
-//                state->lgcc_cntr++;
-//            }
 
-//            state->lgcc_r = state->lgcc_rConv;
+//    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load) + state->lgcc_rate;
+//    uint32 newCwnd = state->lgcc_rate * state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8;//(double)state->srtt.dbl() / 8;//
 
-/*    double nm = (state->lgcc_calcLoad > 0.5)? state->lgcc_calcLoad : 0.5;
-    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (nm - state->lgcc_load) + state->lgcc_rate;*/
-    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load) + state->lgcc_rate;
 
-//        if(state->lgcc_load >= 1) {
-//            if(state->lgcc_phyRate > 100000000)
-//                state->lgcc_phyRate *= 0.95;
-//        } else {
-//            if(state->lgcc_phyRate < 100000000000)
-//            state->lgcc_phyRate += 100000000;
-//        }
+    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) + state->lgcc_rate;
+    if(state->lgcc_rate < 0)
+        state->lgcc_rate = 2 * state->snd_mss * 8 / (double)state->minrtt.dbl();
 
-    // lgcc_phyRate -> lgcc_carryingCap
-    uint32 newCwnd = state->lgcc_rate * state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8;
-    if(newCwnd < 2 * state->snd_mss) {
-        if(newCwnd * 1.5 < 2 * state->snd_mss)
-            newCwnd *= 1.5;
-        else
-            newCwnd = 2 * state->snd_mss;
+    uint32 newCwnd = 100000000;
+
+    if(state->lgcc_pacing) {
+        double minRTT = (double)state->minrtt.dbl();
         // lgcc_phyRate -> lgcc_carryingCap
-        state->lgcc_rate = newCwnd / (state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8);
-    }
+//        double np = ((state->lgcc_rate * state->lgcc_carryingCap * minRTT) / 8) / (double)state->snd_mss;
+        double np = ((state->lgcc_rate * minRTT) / 8) / (double)state->snd_mss;
+        state->interPacketSpace = minRTT / np;
+        if(state->interPacketSpace <0)
+            state->interPacketSpace = 0.000001;
+        if(!state->lgcc_sch) {
+            conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
+            state->lgcc_sch = true;
+        }
+        if (interPSpaceVector)
+            interPSpaceVector->record(state->interPacketSpace);
+    } else {
+        newCwnd = state->lgcc_rate * (double)state->minrtt.dbl() / 8;// + (state->lgcc_rate * ((double)state->lastrtt.dbl() - (double)state->minrtt.dbl()) / 8);
 
-    uint32 rCwnd = newCwnd / state->snd_mss;
-    if(rCwnd * state->snd_mss < newCwnd)
-        newCwnd = (rCwnd + 1) * state->snd_mss;
+		if(newCwnd < 2 * state->snd_mss) {
+			if(newCwnd * 1.5 < 2 * state->snd_mss)
+				newCwnd *= 1.5;
+			else
+				newCwnd = 2 * state->snd_mss;
+	//        state->lgcc_rate = newCwnd / (state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8);//(double)state->srtt.dbl() / 8);//
+			state->lgcc_rate = newCwnd * 8 / (double)state->minrtt.dbl();//(double)state->srtt.dbl() / 8);//
+		}
+
+		uint32 rCwnd = newCwnd / state->snd_mss;
+		if(rCwnd * state->snd_mss < newCwnd)
+			newCwnd = (rCwnd + 1) * state->snd_mss;
+    }
 
     state->snd_cwnd = newCwnd;
 
@@ -236,20 +275,20 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     state->dctcp_marked = 0;
     state->dctcp_total = 0;
 
-    if(state->lgcc_pacing) {
-        double minRTT = (double)state->minrtt.dbl();
-        // lgcc_phyRate -> lgcc_carryingCap
-        double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_carryingCap);
-        if(totalSpace <0)
-            totalSpace = 0.000001;
-        state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
-        if(!state->lgcc_sch) {
-            conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
-            state->lgcc_sch = true;
-        }
-        if (interPSpaceVector)
-            interPSpaceVector->record(state->interPacketSpace);
-    }
+//    if(state->lgcc_pacing) {
+//        double minRTT = (double)state->minrtt.dbl();
+//        // lgcc_phyRate -> lgcc_carryingCap
+//        double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->lgcc_carryingCap);
+//        if(totalSpace <0)
+//            totalSpace = 0.000001;
+//        state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
+//        if(!state->lgcc_sch) {
+//            conn->schedulePace(paceTimer, exponential(state->interPacketSpace));
+//            state->lgcc_sch = true;
+//        }
+//        if (interPSpaceVector)
+//            interPSpaceVector->record(state->interPacketSpace);
+//    }
 }
 
 void LGCC::processPaceTimer(TCPEventCode& event)
@@ -257,11 +296,11 @@ void LGCC::processPaceTimer(TCPEventCode& event)
     TCPTahoeRenoFamily::processPaceTimer(event);
 
     uint32 cwnd = state->snd_cwnd;
-    if(state->snd_cwnd >= (state->snd_nxt - state->snd_una) + 2 * state->snd_mss)
+    if(state->snd_cwnd >= (state->snd_nxt - state->snd_una) + 1 * state->snd_mss)
         state->snd_cwnd = state->snd_mss + (state->snd_nxt - state->snd_una);
 
-//    if(state->snd_cwnd < (state->snd_nxt - state->snd_una) + 1 * state->snd_mss)
-//            state->snd_cwnd = state->snd_mss + (state->snd_nxt - state->snd_una);
+//    if(state->snd_cwnd >= (state->snd_nxt - state->snd_una) + 1 * state->snd_mss)
+//        state->snd_cwnd = state->snd_mss;
 
     sendData(false);
 

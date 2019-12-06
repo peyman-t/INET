@@ -213,6 +213,7 @@ void TCP2::handleMessage(cMessage *msg)
                 str = str + buf;
                 str = str + "]";
                 TCPRelayApp *relay = dynamic_cast<TCPRelayApp *>(getModuleByPath(str.c_str()));// "appOut", appGateIndex);
+                bool dropped = false;
                 if(relay != NULL) {
 //                        if(par("lgccAggregated")) {
 ////                            if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
@@ -238,7 +239,7 @@ void TCP2::handleMessage(cMessage *msg)
 ////                                }
 ////                            }
 
-                            relay->processRatesAndWeights(conn, tcpseg);
+                            dropped = relay->processSegment(conn, tcpseg);
 //                            bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
 //                            if (!ret)
 //                                removeConnection(conn);
@@ -267,14 +268,18 @@ void TCP2::handleMessage(cMessage *msg)
 //
 //
                 }
-                conn->getState()->ecn = tcpseg->getEcnBit();
-                if(tcpseg->getEcnBit())
-                    dropPBVector->record(1);
-                else
-                    dropPBVector->record(0);
+                if(!dropped) {
+                    conn->getState()->ecn = tcpseg->getEcnBit();
+                    if(tcpseg->getEcnBit())
+                        dropPBVector->record(1);
+                    else
+                        dropPBVector->record(0);
                     bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                     if (!ret)
                         removeConnection(conn);
+
+                } else
+                    delete tcpseg;
                 // Peyman -- pushback -- up to here
             }
             else

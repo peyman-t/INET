@@ -22,7 +22,7 @@
 
 TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
 {
-    ssthresh = 655350;
+    ssthresh = 7500000;//655350;
 
     dctcp_alpha = 0;
     dctcp_windEnd = snd_una;
@@ -43,8 +43,8 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_calcLoad = 0;
     lgcc_gamma = 0.1;   // 40Mbps : 0.05;
 
-    lgcc_rInit = 0.30;   // 40Mbps : 0.20;          10Mbps : 0.1;
-    lgcc_rConv = 0.05;   // 40Mbps : 0.05;          10Mbps : 0.1;
+    lgcc_rInit = 0.3; //0.30;   // 40Mbps : 0.20;          10Mbps : 0.1;
+    lgcc_rConv = 0.025; //0.05;   // 40Mbps : 0.05;          10Mbps : 0.1;
     lgcc_r = lgcc_rInit;
 
     lgcc_cntr = 0;
