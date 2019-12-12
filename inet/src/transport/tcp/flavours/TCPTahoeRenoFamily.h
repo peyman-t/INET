@@ -51,6 +51,7 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     double lgcc_rate;
     double lgcc_maxWin;
     double lgcc_phyRate;
+    double lgcc_minLinkRate;
     double lgcc_carryingCap;
     int lgcc_winSize;
     double lgcc_load;
@@ -69,6 +70,7 @@ class INET_API TCPTahoeRenoFamilyStateVariables : public TCPBaseAlgStateVariable
     bool lgcc_sch;
     bool lgcc_sch_rate;
     bool lgcc_pacing;
+    bool lgcc_AdaptiveR;
     std::string weights;
 
     bool ecnnum_pacing;

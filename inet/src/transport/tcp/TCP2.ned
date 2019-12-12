@@ -219,6 +219,7 @@ simple TCP2 like ITCP
         double ldatarate @unit(bps) = default(10Mbps);
         bool lpacing = default(false);
         bool lgccAggregated = default(false);
+        bool lgccAdaptiveR = default(true);
         double lgccPhi1 = default(10.0); // The log base - rate  
         double lgccPhi2 = default(10.0); // The log base - cost 
         double param1 = default(0.0); // ECNNUM=ecnnum_alpha,  

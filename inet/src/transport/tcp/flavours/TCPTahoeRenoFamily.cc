@@ -35,7 +35,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     dctcp_total = 0;
     dctcp_totalSent = 0;
 
-    lgcc_phyRate = 10000000000;
+    lgcc_phyRate = lgcc_minLinkRate = 10000000000;
     lgcc_carryingCap = lgcc_phyRate;
 //    lgcc_maxWin = 240000; // 40Mbps : 240000;        10Mbps : 60000;
     lgcc_rate = 0.001;//2 / (lgcc_maxWin / 1500);
@@ -44,7 +44,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_gamma = 0.1;   // 40Mbps : 0.05;
 
     lgcc_rInit = 0.3; //0.30;   // 40Mbps : 0.20;          10Mbps : 0.1;
-    lgcc_rConv = 0.025; //0.05;   // 40Mbps : 0.05;          10Mbps : 0.1;
+    lgcc_rConv = 0.05; //0.05;   // 40Mbps : 0.05;          10Mbps : 0.1;
     lgcc_r = lgcc_rInit;
 
     lgcc_cntr = 0;

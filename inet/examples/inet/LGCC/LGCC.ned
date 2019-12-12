@@ -24,9 +24,9 @@ network dumbbellAgg
         @display("bgb=637,337");
         double ldelay @unit(s) = default(0.01s);
         double ldatarate @unit(bps) = default(10Mbps); // bits per second; 0=infinite
-        
+
         double mdatarate @unit(bps) = default(ldatarate);
-        
+
     types:
         channel SlowP extends DatarateChannel
         {
@@ -110,4 +110,61 @@ network dumbbellAgg
         routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client23.pppg++;
         routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client24.pppg++;
         routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client25.pppg++;
+}
+
+network chain
+{
+    parameters:
+        @display("bgb=637,337");
+        double ldelay @unit(s) = default(0.01s);
+        double ldatarate @unit(bps) = default(10Mbps); // bits per second; 0=infinite
+
+        double mdatarate @unit(bps) = default(ldatarate * 0.8);
+
+    types:
+        channel SlowP extends DatarateChannel
+        {
+            parameters:
+                per = 0;
+                ber = 0;
+        }
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                per = 0;
+                ber = 0;
+        }
+        channel HighSpeedP extends DatarateChannel
+        {
+            parameters:
+                per = 0;
+                ber = 0;
+        }
+
+    submodules:
+        configurator: IPv4NetworkConfigurator {
+            @display("p=346,30");
+        }
+        routerIng: SplitTCPRouter {
+            parameters:
+                @display("p=228,123;i=abstract/router");
+        }
+        routerEg: SplitTCPRouter {
+            parameters:
+                @display("p=412,123;i=abstract/router");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=95,123");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=553,123");
+        }
+    connections:
+
+        routerIng.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client11.pppg++;
+        routerIng.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+
+        routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = mdatarate; } <--> client21.pppg++;
 }

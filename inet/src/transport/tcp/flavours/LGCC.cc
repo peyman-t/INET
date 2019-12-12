@@ -100,14 +100,18 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 
     if(state->lgcc_cntr == 0) {
         if(conn->tcpMain != NULL) {
-            state->lgcc_phyRate = conn->tcpMain->par("ldatarate");
+            state->lgcc_minLinkRate = conn->tcpMain->par("ldatarate");
             state->lgccPhi1 = conn->tcpMain->par("lgccPhi1");
             state->lgccPhi2 = conn->tcpMain->par("lgccPhi2");
+            state->lgcc_AdaptiveR  = conn->tcpMain->par("lgccAdaptiveR");
         } else {
-            state->lgcc_phyRate = conn->tcpMain2->par("ldatarate");
+            state->lgcc_minLinkRate = conn->tcpMain2->par("ldatarate");
             state->lgccPhi1 = conn->tcpMain2->par("lgccPhi1");
             state->lgccPhi2 = conn->tcpMain2->par("lgccPhi2");
+            state->lgcc_AdaptiveR  = conn->tcpMain2->par("lgccAdaptiveR");
         }
+
+        state->lgcc_phyRate = state->lgcc_minLinkRate;
 //        state->minrtt = 0.000140;
 
 //        state->lgcc_rate = state->snd_cwnd / (state->lgcc_phyRate * (double)state->minrtt.dbl() / 8);
@@ -127,17 +131,16 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
         {
             const InterfaceEntry *destIE = re->getInterface();
             PPP * ppp = dynamic_cast<PPP *>(destIE->getInterfaceModule());
-            double dr = ppp->getDataRate();
-            state->lgcc_phyRate = dr;
+            state->lgcc_phyRate = ppp->getDataRate();
         }
     }
 
 
-    uint32 recvCarryingCap = (state->snd_wnd) * 8;
-    if(recvCarryingCap < state->lgcc_phyRate)
+    double recvCarryingCap = (state->snd_wnd) * 8;
+    if(recvCarryingCap < std::min(state->lgcc_phyRate, state->lgcc_minLinkRate))
         state->lgcc_carryingCap = recvCarryingCap;
     else
-        state->lgcc_carryingCap = state->lgcc_phyRate * 0.95;
+        state->lgcc_carryingCap = std::min(state->lgcc_phyRate, state->lgcc_minLinkRate) * 0.99;
 
 
     simtime_t now1 = simTime();
@@ -201,6 +204,9 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 //        }
 //    } else if(expRate < 1)
 //        state->lgcc_r = state->lgcc_rConv;
+    if(state->lgcc_calcLoad == 0) {
+        state->lgcc_r += state->lgcc_r * 0.1;
+    }
 
     state->lgcc_r = std::max(std::min(state->lgcc_r, state->lgcc_rInit), state->lgcc_rConv);
 
@@ -217,7 +223,8 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 
 //    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (1 - state->lgcc_rate - state->lgcc_load) + state->lgcc_rate;
 //    uint32 newCwnd = state->lgcc_rate * state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8;//(double)state->srtt.dbl() / 8;//
-
+    if(!state->lgcc_AdaptiveR)
+        state->lgcc_r = state->lgcc_rInit;
 
     state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) + state->lgcc_rate;
     if(state->lgcc_rate < 0)
