@@ -39,6 +39,8 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     double cost;
     double interval;
     double beta;
+    double lgccPhi1;
+    double lgccPhi2;
 
     TCPSocket socket;
     TCPSocket socket2;

@@ -872,18 +872,30 @@ bool TCPRelayApp::handleOperationStage(LifecycleOperation *operation, int stage,
 }
 
 double TCPRelayApp::getMarkingProb(IPvXAddress srcAddr) {
-    double mp = 0;
+    double mp = 1;
 
     if(weightMap.empty())
-        mp = 0;
+        mp = 1;
     else {
         WeightsMap::iterator it;
         it = weightMap.find(srcAddr.str());
         if(it != weightMap.end())
-            mp = 1 - (it->second / weightSum);
+            mp = (it->second / weightSum);
         else
-            mp = 0;
+            mp = 1;
     }
+
+    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+    if(!reverse) {
+        lgccPhi1 = tcp->par("lgccPhi1");
+        lgccPhi2 = tcp->par("lgccPhi2");
+    } else {
+        lgccPhi1 = tcp2->par("lgccPhi1");
+        lgccPhi2 = tcp2->par("lgccPhi2");
+    }
+
+    mp = 1 - std::exp(std::log(mp) * std::log(lgccPhi2) / std::log(lgccPhi1));
 
     if(getSendQueueSize(srcAddr.str().c_str()) > sendQueueThreshold)
         mp += ((double)getSendQueueSize(srcAddr.str().c_str()) - sendQueueThreshold) / (10 * sendQueueThreshold);
