@@ -56,6 +56,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     interPacketSpace = 0;
     lgcc_pacing = true;
     weights = "";
+    lgcc_method = "";
 
     for(int i = 0; i < lgcc_winSize; i++) {
         ecnmarked[i] = 0;

@@ -104,11 +104,15 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
             state->lgccPhi1 = conn->tcpMain->par("lgccPhi1");
             state->lgccPhi2 = conn->tcpMain->par("lgccPhi2");
             state->lgcc_AdaptiveR  = conn->tcpMain->par("lgccAdaptiveR");
+            const char * method = conn->tcpMain->par("lgccMethod");
+            state->lgcc_method.assign(method);
         } else {
             state->lgcc_minLinkRate = conn->tcpMain2->par("ldatarate");
             state->lgccPhi1 = conn->tcpMain2->par("lgccPhi1");
             state->lgccPhi2 = conn->tcpMain2->par("lgccPhi2");
             state->lgcc_AdaptiveR  = conn->tcpMain2->par("lgccAdaptiveR");
+            const char * method = conn->tcpMain2->par("lgccMethod");
+            state->lgcc_method.assign(method);
         }
 
         state->lgcc_phyRate = state->lgcc_minLinkRate;
@@ -226,7 +230,24 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     if(!state->lgcc_AdaptiveR)
         state->lgcc_r = state->lgcc_rInit;
 
-    state->lgcc_rate = state->lgcc_rate * state->lgcc_r * (-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) + state->lgcc_rate;
+    double primalRate = state->lgcc_rate * state->lgcc_r * (-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) + state->lgcc_rate;
+    double dualRate = state->lgcc_carryingCap * std::exp(std::log(1 - state->lgcc_load) * std::log(state->lgccPhi1) / std::log(state->lgccPhi2));
+
+    if(state->lgcc_method == "Primal")
+        state->lgcc_rate = primalRate;
+    else if(state->lgcc_method == "Dual1") {
+        if(dualRate > 2 * state->lgcc_rate)
+            state->lgcc_rate *= 2;
+        else
+            state->lgcc_rate = dualRate;
+    } else if(state->lgcc_method == "Dual2") {
+        if(primalRate < state->lgcc_rate)
+            state->lgcc_rate = dualRate;
+        else
+            state->lgcc_rate = primalRate;
+    }
+
+
     if(state->lgcc_rate < 0)
         state->lgcc_rate = 2 * state->snd_mss * 8 / (double)state->minrtt.dbl();
 
