@@ -141,6 +141,9 @@ void ABC::receivedDataAck(uint32 firstSeqAcked)
 
         cwndVector->record(state->snd_cwnd);
 
+        if (rateVector)
+            rateVector->record(state->snd_cwnd * 8 / state->lastrtt);
+
 //        uint32 rCwnd = state->snd_cwnd / state->snd_mss;
 //        if(rCwnd * state->snd_mss < state->snd_cwnd)
 //            state->snd_cwnd = (rCwnd + 1) * state->snd_mss;
