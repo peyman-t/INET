@@ -895,7 +895,7 @@ double TCPRelayApp::getMarkingProb(IPvXAddress srcAddr) {
         lgccPhi2 = tcp2->par("lgccPhi2");
     }
 
-    mp = 1 - std::exp(std::log(mp) * std::log(lgccPhi2) / std::log(lgccPhi1));
+    mp = 1 - exp(log(mp) * log(lgccPhi2) / log(lgccPhi1));
 
     if(getSendQueueSize(srcAddr.str().c_str()) > sendQueueThreshold)
         mp += ((double)getSendQueueSize(srcAddr.str().c_str()) - sendQueueThreshold) / (10 * sendQueueThreshold);

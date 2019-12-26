@@ -145,7 +145,7 @@ void ECNNUMP2::processRateUpdateTimer(TCPEventCode& event)
 //        state->ecnnum_fraction = 1 - std::pow(1 - state->ecnnum_fraction, 1.1);
 //    } else
     {
-        double q = ( -std::log(1-state->ecnnum_fraction)  / std::log(state->ecnnum_phi)); //
+        double q = ( -log(1-state->ecnnum_fraction)  / log(state->ecnnum_phi)); //
 //        double newRate = state->ecnnum_Rate + state->ecnnum_alpha * state->ecnnum_Rate * (1 / state->ecnnum_Rate - q );
         double newRate = state->ecnnum_Rate + state->ecnnum_alpha * state->ecnnum_Rate / 20 * (1 / state->ecnnum_Rate - q );
         if(newRate > 2 * state->ecnnum_Rate)
@@ -164,7 +164,7 @@ void ECNNUMP2::processRateUpdateTimer(TCPEventCode& event)
 
     uint32 newCwnd = state->snd_cwnd;
     newCwnd = state->snd_mss * state->ecnnum_Rate * (double)state->minrtt.dbl() / 0.001;
-    newCwnd = std::round(newCwnd / state->snd_mss) * state->snd_mss;
+    newCwnd = round(newCwnd / state->snd_mss) * state->snd_mss;
     if(newCwnd < state->snd_mss)
         newCwnd = state->snd_mss;
 

@@ -280,6 +280,7 @@ l1:
         simtime_t now = simTime();
         bool cut = false;
 
+
         //if(now - state->dctcp_lastCalcTime >= state->minrtt) {
             if(firstSeqAcked >= state->dctcp_windEnd) {
                                         //            if(now - state->dctcp_lastCalcTime >= state->srtt) {
@@ -291,7 +292,7 @@ l1:
 
             double d = conn->tcpMain->par("param2");
             if(d > 0) {
-                ratio = ( -std::log(1 - ratio)  / std::log(d));
+                ratio = ( -log(1 - ratio)  / log(d));
 
                 if(ratio > 1)
                     ratio = 1;
@@ -331,8 +332,7 @@ l1:
                 cwndVector->record(state->snd_cwnd);
         } else {
 
-//LGCC
-//            if(state->dctcp_marked == 0) {
+
 
             //
             // Perform slow start and congestion avoidance.
@@ -386,6 +386,11 @@ l1:
             }
         }
     }
+
+
+    if (rateVector)
+        rateVector->record(state->snd_cwnd * 8 / (state->lastrtt));
+
 l2:
     if (state->sack_enabled && state->lossRecovery)
     {

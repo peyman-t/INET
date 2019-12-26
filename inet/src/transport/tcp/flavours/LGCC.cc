@@ -186,11 +186,11 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     double alphaTemp = state->lgcc_r;
     bool setBack = false;
 
-    double expRate = state->lgcc_carryingCap * std::exp(std::log(1 - state->lgcc_calcLoad) * std::log(state->lgccPhi1) / std::log(state->lgccPhi2));
+    double expRate = state->lgcc_carryingCap * exp(log(1 - state->lgcc_calcLoad) * log(state->lgccPhi1) / log(state->lgccPhi2));
     if(state->lgcc_rate < expRate - 0.015 * state->lgcc_carryingCap && expRate < state->lgcc_carryingCap) { //0.015
         state->lgcc_r = ((expRate) - state->lgcc_rate) / state->lgcc_carryingCap;// * 6.66;//2.5
     } else if(state->lgcc_rate > expRate + 0.015 * state->lgcc_carryingCap) {
-        if((-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) < 0)
+        if((-log(state->lgcc_rate / state->lgcc_carryingCap) / log(state->lgccPhi1) + log(1 - state->lgcc_load) / log(state->lgccPhi2)) < 0)
         {
             state->lgcc_r = (state->lgcc_rate - (expRate)) / state->lgcc_carryingCap;// * 6.66;//2.5
             setBack = true;
@@ -230,8 +230,8 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     if(!state->lgcc_AdaptiveR)
         state->lgcc_r = state->lgcc_rInit;
 
-    double primalRate = state->lgcc_rate * state->lgcc_r * (-std::log(state->lgcc_rate / state->lgcc_carryingCap) / std::log(state->lgccPhi1) + std::log(1 - state->lgcc_load) / std::log(state->lgccPhi2)) + state->lgcc_rate;
-    double dualRate = state->lgcc_carryingCap * std::exp(std::log(1 - state->lgcc_load) * std::log(state->lgccPhi1) / std::log(state->lgccPhi2));
+    double primalRate = state->lgcc_rate * state->lgcc_r * (-log(state->lgcc_rate / state->lgcc_carryingCap) / log(state->lgccPhi1) + log(1 - state->lgcc_load) / log(state->lgccPhi2)) + state->lgcc_rate;
+    double dualRate = state->lgcc_carryingCap * exp(log(1 - state->lgcc_load) * log(state->lgccPhi1) / log(state->lgccPhi2));
 
     if(state->lgcc_method == "Primal")
         state->lgcc_rate = primalRate;
