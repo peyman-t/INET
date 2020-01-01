@@ -284,6 +284,18 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 			newCwnd = (rCwnd + 1) * state->snd_mss;
     }
 
+    if(conn->tcpMain != NULL) {
+        if ((simTime() >= conn->tcpMain->par("param3")) && (conn->tcpMain->par("param3").doubleValue() != 0.0)) {
+            state->lgcc_rate = 0;
+            newCwnd = 0;
+        }
+    } else {
+        if ((simTime() >= conn->tcpMain2->par("param3")) && (conn->tcpMain2->par("param3").doubleValue() != 0.0)) {
+            state->lgcc_rate = 0;
+            newCwnd = 0;
+        }
+    }
+
     state->snd_cwnd = newCwnd;
 
     if (carryingCapacity)

@@ -48,7 +48,7 @@ void ABCQueue::initialize()
     delta = par("delta");
     interval = par("interval");
 
-    drainRate = 1;
+    drainRate = prevDRate = 1;
     drainRateUpdated = 0;
     sentLength = 0;
     token = 0;
@@ -111,12 +111,19 @@ void ABCQueue::requestPacket()
         if(simTime() - drainRateUpdated >= interval) {
             drainRateUpdated = simTime();
 
+            double newDRate = (sentLength * 8 / interval);
+            if(newDRate > prevDRate)
+                drainRate = newDRate;
+            else {
+                drainRate = newDRate * 0.1 + 0.9 * drainRate;
+            }
+            prevDRate = newDRate;
 
-            drainRate = (sentLength * 8 / interval);// * 0.1 + 0.9 * drainRate;
 //            if(duration > 0)
 //                drainRate = sentLength * 8 / duration;
             sentLength = 0;
             duration = 0;
+            emit(drainRateSignal, drainRate);
         }
 
         cPacket *pkt = check_and_cast<cPacket *>(msg);
@@ -125,7 +132,7 @@ void ABCQueue::requestPacket()
         double len = pkt->getByteLength();
         duration += len * 8 / linkRate;
 
-        targetRate = no * linkRate - (linkRate / delta) * (lastQueuingDelay - delayThreshlod);
+        targetRate = no * linkRate - (linkRate / delta) * std::max(0.0, lastQueuingDelay - delayThreshlod);
 
         double f = 0.5 * targetRate / drainRate;//linkRate;
 
@@ -144,7 +151,6 @@ void ABCQueue::requestPacket()
             ipPacket->setExplicitCongestionNotification(3);
         }
 
-        emit(drainRateSignal, drainRate);
         emit(targetRateSignal, targetRate);
         emit(fSignal, f);
 

@@ -139,6 +139,9 @@ void ABC::receivedDataAck(uint32 firstSeqAcked)
         if(state->snd_cwnd < 2 * state->snd_mss)
             state->snd_cwnd = 2 * state->snd_mss;
 
+        if ((simTime() >= conn->tcpMain->par("param3")) && (conn->tcpMain->par("param3").doubleValue() != 0))
+            state->snd_cwnd = 1;
+
         cwndVector->record(state->snd_cwnd);
 
         if (rateVector)

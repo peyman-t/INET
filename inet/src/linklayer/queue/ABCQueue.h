@@ -39,6 +39,7 @@ class INET_API ABCQueue : public PassiveQueueBase
     double linkRate;
 
     double drainRate;
+    double prevDRate;
     double interval;
     double duration;
 

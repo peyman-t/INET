@@ -270,11 +270,11 @@ void TCP2::handleMessage(cMessage *msg)
                 }
                 if(!dropped) {
                     conn->getState()->ecn = tcpseg->getEcnBit();
-                    if(tcpseg->getEcnBit())
+                    bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
+                    if(conn->getState()->ecn)
                         dropPBVector->record(1);
                     else
                         dropPBVector->record(0);
-                    bool ret = conn->processTCPSegment(tcpseg, srcAddr, destAddr);
                     if (!ret)
                         removeConnection(conn);
 
