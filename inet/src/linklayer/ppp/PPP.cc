@@ -406,6 +406,15 @@ void PPP::handleMessage(cMessage *msg)
         setDataRate(normalRate);
     }
 
+//    if(now < 1.0 || now > 4.0)
+//        setDataRate(normalRate);
+//    else if(now >= 1.0 && now < 2.0)
+//        setDataRate(400000000);
+//    else if(now >= 2.0 && now < 3.0)
+//        setDataRate(300000000);
+//    else if(now >= 3.0 && now < 4.0)
+//        setDataRate(400000000);
+
     if (ev.isGUI())
         updateDisplayString();
 }
