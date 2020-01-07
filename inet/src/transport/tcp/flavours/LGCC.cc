@@ -141,10 +141,11 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 
 
     double recvCarryingCap = (state->snd_wnd) * 8;
-    if(recvCarryingCap < std::min(state->lgcc_phyRate, state->lgcc_minLinkRate))
+    double maxLinkRate = std::min(state->lgcc_phyRate, state->lgcc_minLinkRate) * 0.99;
+    if(recvCarryingCap < maxLinkRate)
         state->lgcc_carryingCap = recvCarryingCap;
     else
-        state->lgcc_carryingCap = std::min(state->lgcc_phyRate, state->lgcc_minLinkRate) * 0.99;
+        state->lgcc_carryingCap = maxLinkRate;
 
 
     simtime_t now1 = simTime();
@@ -282,6 +283,13 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
 		uint32 rCwnd = newCwnd / state->snd_mss;
 		if(rCwnd * state->snd_mss < newCwnd)
 			newCwnd = (rCwnd + 1) * state->snd_mss;
+
+		uint32 maxCwnd = maxLinkRate * (double)state->minrtt.dbl() / 8;
+		if(newCwnd > maxCwnd) {
+	        rCwnd = maxCwnd / state->snd_mss;
+            newCwnd = rCwnd * state->snd_mss;
+            state->lgcc_rate = newCwnd * 8 / (double)state->minrtt.dbl();//(double)state->srtt.dbl() / 8);//
+		}
     }
 
     if(conn->tcpMain != NULL) {
