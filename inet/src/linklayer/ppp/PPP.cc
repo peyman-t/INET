@@ -27,6 +27,7 @@
 #include "NotificationBoard.h"
 #include "NotifierConsts.h"
 #include "NodeOperations.h"
+#include "XMLUtils.h"
 
 
 Define_Module(PPP);
@@ -107,6 +108,24 @@ void PPP::initialize(int stage)
             EV << "Requesting first frame from queue module\n";
             queueModule->requestPacket();
         }
+
+        rateConfig = par("rateConfig");
+        intervalElements = rateConfig->getChildrenByTagName("interval");
+        currInterval = 0;
+        if((int)intervalElements.size() > currInterval) {
+            const char *startStr = intervalElements[currInterval]->getAttribute("start");
+            const char *endStr = intervalElements[currInterval]->getAttribute("end");
+
+            start = (simtime_t)atof(startStr);
+            end = (simtime_t)atof(endStr);
+
+            newRate = std::atof(intervalElements[currInterval]->getAttribute("speed"));
+        } else {
+            start = 0;
+            end = 0;
+            newRate = 0;
+        }
+
     }
 
     // update display string when addresses have been autoconfigured etc.
@@ -398,10 +417,34 @@ void PPP::handleMessage(cMessage *msg)
 
 
     simtime_t now = simTime();
-    simtime_t r1 = par("tLow");
-    simtime_t r2 = par("tNormal");
-    if(r1 < now && now < r2) {
-        setDataRate(par("lowDatarate"));
+//    simtime_t r1 = par("tLow");
+//    simtime_t r2 = par("tNormal");
+//    if(r1 < now && now < r2) {
+//        setDataRate(par("lowDatarate"));
+//    } else {
+//        setDataRate(normalRate);
+//    }
+
+    if(start <= now) {
+        if(now < end) {
+            setDataRate(newRate);
+        } else {
+            setDataRate(normalRate);
+            currInterval++;
+            if((int)intervalElements.size() > currInterval) {
+                const char *startStr = intervalElements[currInterval]->getAttribute("start");
+                const char *endStr = intervalElements[currInterval]->getAttribute("end");
+
+                start = (simtime_t)atof(startStr);
+                end = (simtime_t)atof(endStr);
+
+                newRate = std::atof(intervalElements[currInterval]->getAttribute("speed"));
+                if(start <= now)
+                    setDataRate(newRate);
+            } else {
+                currInterval--;
+            }
+        }
     } else {
         setDataRate(normalRate);
     }

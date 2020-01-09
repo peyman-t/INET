@@ -54,6 +54,7 @@ simple PPP
         double tLow @unit(s) = default(10s);
         double tNormal @unit(s) = default(10s);
         double lowDatarate @unit(bps) = default(10Mbps);
+        xml rateConfig = default(xml("<rate></rate>")); // XML configuration parameters for IP address assignment and adding manual routes
         
         
 

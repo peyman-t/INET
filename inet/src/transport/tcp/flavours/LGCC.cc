@@ -271,15 +271,6 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     } else {
         newCwnd = state->lgcc_rate * (double)state->minrtt.dbl() / 8;// + (state->lgcc_rate * ((double)state->lastrtt.dbl() - (double)state->minrtt.dbl()) / 8);
 
-		if(newCwnd < 2 * state->snd_mss) {
-			if(newCwnd * 1.5 < 2 * state->snd_mss)
-				newCwnd *= 1.5;
-			else
-				newCwnd = 2 * state->snd_mss;
-	//        state->lgcc_rate = newCwnd / (state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8);//(double)state->srtt.dbl() / 8);//
-			state->lgcc_rate = newCwnd * 8 / (double)state->minrtt.dbl();//(double)state->srtt.dbl() / 8);//
-		}
-
 		uint32 rCwnd = newCwnd / state->snd_mss;
 		if(rCwnd * state->snd_mss < newCwnd)
 			newCwnd = (rCwnd + 1) * state->snd_mss;
@@ -290,6 +281,13 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
             newCwnd = rCwnd * state->snd_mss;
             state->lgcc_rate = newCwnd * 8 / (double)state->minrtt.dbl();//(double)state->srtt.dbl() / 8);//
 		}
+
+        if(newCwnd < 2 * state->snd_mss) {
+            newCwnd = 2 * state->snd_mss;
+    //        state->lgcc_rate = newCwnd / (state->lgcc_carryingCap * (double)state->minrtt.dbl() / 8);//(double)state->srtt.dbl() / 8);//
+            state->lgcc_rate = newCwnd * 8 / (double)state->minrtt.dbl();//(double)state->srtt.dbl() / 8);//
+        }
+
     }
 
     if(conn->tcpMain != NULL) {

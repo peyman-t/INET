@@ -51,6 +51,12 @@ class INET_API PPP : public MACBase, public cListener
     std::string oldConnColor;
 
     double normalRate;
+    cXMLElement *rateConfig;
+    cXMLElementList intervalElements;
+    simtime_t start;
+    simtime_t end;
+    int currInterval;
+    double newRate;
 
     // statistics
     long numSent;
