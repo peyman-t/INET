@@ -168,3 +168,100 @@ network chain
 
         routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = mdatarate; } <--> client21.pppg++;
 }
+
+network chain5
+{
+    parameters:
+        @display("bgb=637,555");
+        double ldelay @unit(s) = default(0.01s);
+        double ldatarate @unit(bps) = default(10Mbps); // bits per second; 0=infinite
+
+        double mdatarate @unit(bps) = default(ldatarate * 0.8);
+
+    types:
+        channel SlowP extends DatarateChannel
+        {
+            parameters:
+                per = 0;
+                ber = 0;
+        }
+        channel NormalP extends DatarateChannel
+        {
+            parameters:
+                per = 0;
+                ber = 0;
+        }
+        channel HighSpeedP extends DatarateChannel
+        {
+            parameters:
+                per = 0;
+                ber = 0;
+        }
+
+    submodules:
+        configurator: IPv4NetworkConfigurator {
+            @display("p=346,30");
+        }
+        routerIng1: SplitTCPRouter {
+            parameters:
+                @display("p=228,123;i=abstract/router");
+        }
+        routerEg: SplitTCPRouter {
+            parameters:
+                @display("p=419,300;i=abstract/router");
+        }
+        client11: StandardHost2 {
+            parameters:
+                @display("p=95,123");
+        }
+        client21: StandardHost2 {
+            parameters:
+                @display("p=559,300");
+        }
+        client12: StandardHost2 {
+            parameters:
+                @display("p=95,205");
+        }
+        routerIng2: SplitTCPRouter {
+            parameters:
+                @display("p=228,205;i=abstract/router");
+        }
+        client13: StandardHost2 {
+            parameters:
+                @display("p=95,300");
+        }
+        routerIng3: SplitTCPRouter {
+            parameters:
+                @display("p=228,300;i=abstract/router");
+        }
+        client14: StandardHost2 {
+            parameters:
+                @display("p=95,389");
+        }
+        routerIng4: SplitTCPRouter {
+            parameters:
+                @display("p=228,389;i=abstract/router");
+        }
+        client15: StandardHost2 {
+            parameters:
+                @display("p=95,473");
+        }
+        routerIng5: SplitTCPRouter {
+            parameters:
+                @display("p=228,473;i=abstract/router");
+        }
+    connections:
+
+        routerIng1.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client11.pppg++;
+        routerIng1.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+
+        routerEg.pppg++ <--> NormalP {  delay = ldelay; datarate = mdatarate; } <--> client21.pppg++;
+        routerIng2.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client12.pppg++;
+        routerIng3.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client13.pppg++;
+        routerIng4.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client14.pppg++;
+        routerIng5.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> client15.pppg++;
+        routerIng2.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+        routerIng3.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+        routerIng4.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+        routerIng5.pppg++ <--> NormalP {  delay = ldelay; datarate = ldatarate; } <--> routerEg.pppg++;
+}
