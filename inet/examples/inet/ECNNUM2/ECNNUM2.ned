@@ -42,49 +42,49 @@ import inet.linklayer.queue.REDDropperNUMDual2;
 //        fifo.out --> out;
 //}
 
-module REDQueueNUMDual like IOutputQueue
-{
-    gates:
-        input in;
-        output out;
-
-    submodules:
-        red: REDDropperNUMDual {
-            numGates = 1;
-            wq = default(0.002);
-            minths = default("10");
-            maxths = default("40");
-            maxps = default("0.10");
-            pkrates = default("8333.333");
-        }
-        fifo: FIFOQueue;
-    connections:
-        in --> red.in[0];
-        red.out[0] --> fifo.in++;
-        fifo.out --> out;
-}
-
-module REDQueueNUMDual2 like IOutputQueue
-{
-    gates:
-        input in;
-        output out;
-
-    submodules:
-        red: REDDropperNUMDual2 {
-            numGates = 1;
-            wq = default(0.0002);
-            minths = default("10");
-            maxths = default("40");
-            maxps = default("0.10");
-            pkrates = default("8333.333");
-        }
-        fifo: FIFOQueue;
-    connections:
-        in --> red.in[0];
-        red.out[0] --> fifo.in++;
-        fifo.out --> out;
-}
+//module REDQueueNUMDual like IOutputQueue
+//{
+//    gates:
+//        input in;
+//        output out;
+//
+//    submodules:
+//        red: REDDropperNUMDual {
+//            numGates = 1;
+//            wq = default(0.002);
+//            minths = default("10");
+//            maxths = default("40");
+//            maxps = default("0.10");
+//            pkrates = default("8333.333");
+//        }
+//        fifo: FIFOQueue;
+//    connections:
+//        in --> red.in[0];
+//        red.out[0] --> fifo.in++;
+//        fifo.out --> out;
+//}
+//
+//module REDQueueNUMDual2 like IOutputQueue
+//{
+//    gates:
+//        input in;
+//        output out;
+//
+//    submodules:
+//        red: REDDropperNUMDual2 {
+//            numGates = 1;
+//            wq = default(0.0002);
+//            minths = default("10");
+//            maxths = default("40");
+//            maxps = default("0.10");
+//            pkrates = default("8333.333");
+//        }
+//        fifo: FIFOQueue;
+//    connections:
+//        in --> red.in[0];
+//        red.out[0] --> fifo.in++;
+//        fifo.out --> out;
+//}
 
 
 network Dumbbell
@@ -97,6 +97,8 @@ network Dumbbell
         channel NormalP extends DatarateChannel
         {
             parameters:
+                datarate = 100Mbps;
+                delay = 3ms;
                 //                datarate = ldatarate;
                 per = 0;
                 ber = 0;
