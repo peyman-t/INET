@@ -90,10 +90,10 @@ void LGCShQ::processRexmitTimer(TCPEventCode& event)
 void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
 {
 
-    if(state->ecnnum_pacing) {
+    if(state->lgcc_pacing) {
         TCPTahoeRenoFamily::processRateUpdateTimer(event);
 
-        conn->scheduleRateUpdate(rateUpdateTimer, 0.00048);
+//        conn->scheduleRateUpdate(rateUpdateTimer, state->minrtt.dbl());
     }
 
     if(state->ecnnum_cntr == 0) {
@@ -116,8 +116,8 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
 
     simtime_t now1 = simTime();
 
-    if(state->dctcp_marked == state->dctcp_total)
-        state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * 1;
+    if(state->dctcp_marked / state->dctcp_total >= 0.9)
+        state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * (state->dctcp_marked / state->dctcp_total);
     else
         state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * 0;
 
@@ -151,9 +151,18 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
 //    } else
     {
         double q = ( -log(1-state->ecnnum_fraction)  / log(state->ecnnum_phi)); //
-//        double newRate = state->ecnnum_Rate + state->ecnnum_alpha * state->ecnnum_Rate * (1 / state->ecnnum_Rate - q );
-        double gr = (pow(2, -(state->dctcp_marked / state->dctcp_total)) * log(1.4));
-        double newRate = state->ecnnum_Rate + gr * state->ecnnum_Rate * (1 - state->ecnnum_Rate / state->ecnnum_maxRate - q );
+
+        double logP = conn->tcpMain->par("param4");
+        double coef = conn->tcpMain->par("param5");
+
+        double gradient = (1 - state->ecnnum_Rate / state->ecnnum_maxRate - q );
+        double gr = (pow(coef, -(state->dctcp_marked / state->dctcp_total)) * log(logP));
+//        if((gradient < 0) && (state->dctcp_marked == state->dctcp_total))
+//            gr = (pow(coef, -(0 / state->dctcp_total)) * log(logP));
+
+        state->lgcc_r = gr;
+
+        double newRate = state->ecnnum_Rate + gr * state->ecnnum_Rate * gradient;
         if(newRate > 2 * state->ecnnum_Rate)
             state->ecnnum_Rate *= 2;
         else
@@ -194,13 +203,15 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
         cwndVector->record(state->snd_cwnd);
     if (rateVector && simTime() >= conn->tcpMain->par("param3"))
         rateVector->record(state->ecnnum_Rate);
+    if (brVector)
+            brVector->record(state->lgcc_r);
 
     state->ecnnum_lastCalcTime = now1;
 
     state->dctcp_marked = 0;
     state->dctcp_total = 0;
 
-    if(state->ecnnum_pacing) {
+    if(state->lgcc_pacing) {
         double minRTT = (double)state->minrtt.dbl();
         double totalSpace = minRTT - (8 * (double)state->snd_cwnd / state->ecnnum_maxRate);
         state->interPacketSpace = totalSpace / (state->snd_cwnd / state->snd_mss);
@@ -211,6 +222,7 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
         if (interPSpaceVector)
             interPSpaceVector->record(state->interPacketSpace);
     }
+
 }
 
 void LGCShQ::processPaceTimer(TCPEventCode& event)
@@ -258,12 +270,21 @@ void LGCShQ::receivedDataAck(uint32 firstSeqAcked)
                 markingProb->record(0);
         }
 
-        if(state->ecnnum_pacing) {
-            if(!state->lgcc_sch_rate) {
-                state->lgcc_sch_rate = true;
+        state->lgcc_pacing = conn->tcpMain->par("lpacing");
+
+
+        if(state->lgcc_pacing) {
+//            if(!state->lgcc_sch) {
+////                state->lgcc_sch = true;
+//                TCPEventCode event = TCP_E_IGNORE;
+//                processRateUpdateTimer(event);
+//                //conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
+//            }
+            simtime_t now1 = simTime();
+
+            if((now1 - state->ecnnum_lastCalcTime >= state->minrtt * 1)) {// state->minrtt * 1
                 TCPEventCode event = TCP_E_IGNORE;
                 processRateUpdateTimer(event);
-                //conn->scheduleRateUpdate(rateUpdateTimer, 0.000140);
             }
             return;
         } else {

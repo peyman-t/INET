@@ -54,7 +54,7 @@ TCPTahoeRenoFamilyStateVariables::TCPTahoeRenoFamilyStateVariables()
     lgcc_sch = false;
     lgcc_sch_rate = false;
     interPacketSpace = 0;
-    lgcc_pacing = true;
+    lgcc_pacing = false;
     weights = "";
     lgcc_method = "";
 

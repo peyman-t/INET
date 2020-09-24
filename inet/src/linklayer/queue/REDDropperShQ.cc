@@ -167,6 +167,10 @@ bool REDDropperShQ::shouldDrop(cPacket *packet)
 //            avgRate = pow(1 - alpha, d - 1) * avgRate;
 //        }
 //        r_time += (double)d / 100;
+        double ql = getLength();
+
+        curRate += ql * 1500;
+
         avgRate = (1 - alpha) * avgRate + alpha * curRate;
 
         p = maxPercent - ((pkrate * duration - avgRate) / (pkrate * duration)) * maxPercent;
