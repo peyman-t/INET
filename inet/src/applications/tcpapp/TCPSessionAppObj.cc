@@ -161,15 +161,15 @@ cPacket *TCPSessionAppObj::createDataPacket(long sendBytes)
         case TCP_TRANSFER_OBJECT:
         {
             cPacket *msg = NULL;
-            msg = new cPacket("data1");
+            msg = new cPacket("");
             msg->setByteLength(sendBytes);
-            msg->encapsulate(new cPacket("test"));
+            msg->encapsulate(new cPacket(""));
             return msg;
         }
 
         case TCP_TRANSFER_BYTESTREAM:
         {
-            ByteArrayMessage *msg = new ByteArrayMessage("data1");
+            ByteArrayMessage *msg = new ByteArrayMessage("");
             unsigned char *ptr = new unsigned char[sendBytes];
 
             for (int i = 0; i < sendBytes; i++)

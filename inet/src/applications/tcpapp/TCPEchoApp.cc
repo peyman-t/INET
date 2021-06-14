@@ -41,6 +41,8 @@ void TCPEchoApp::initialize(int stage)
         socket.setOutputGate(gate("tcpOut"));
         socket.readDataTransferModePar(*this);
 
+        endToEndDelayVector = new cOutVector("EndToEndDelayVector");
+
         nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
     }
     else if (stage == 3)
@@ -104,6 +106,10 @@ void TCPEchoApp::handleMessage(cMessage *msg)
         cPacket *pkt = check_and_cast<cPacket *>(msg);
         emit(rcvdPkSignal, pkt);
         bytesRcvd += pkt->getByteLength();
+
+        simtime_t t1 = simTime();
+        simtime_t t2 = msg->getTimestamp();
+        endToEndDelayVector->record(t1 - t2);
 
         if (echoFactor == 0)
         {
@@ -180,5 +186,7 @@ void TCPEchoApp::finish()
 {
     recordScalar("bytesRcvd", bytesRcvd);
     recordScalar("bytesSent", bytesSent);
+
+    delete endToEndDelayVector;
 }
 

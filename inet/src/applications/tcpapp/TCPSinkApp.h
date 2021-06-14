@@ -30,6 +30,8 @@ class INET_API TCPSinkApp : public cSimpleModule, public ILifecycle
     //statistics:
     static simsignal_t rcvdPkSignal;
 
+    cOutVector *endToEndDelayVector;
+
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback)
     { Enter_Method_Silent(); throw cRuntimeError("Unsupported lifecycle operation '%s'", operation->getClassName()); return true; }

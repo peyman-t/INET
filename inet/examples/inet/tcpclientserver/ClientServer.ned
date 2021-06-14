@@ -33,7 +33,7 @@ network ClientServer
         channel C extends DatarateChannel
         {
             datarate = 10Mbps;
-            delay = 0.1us;
+            delay = 20ms;
             per = per;
         }
     submodules:

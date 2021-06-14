@@ -38,6 +38,8 @@ class INET_API TCPEchoApp : public cSimpleModule, public ILifecycle
     static simsignal_t rcvdPkSignal;
     static simsignal_t sentPkSignal;
 
+    cOutVector *endToEndDelayVector;
+
   public:
     virtual bool handleOperationStage(LifecycleOperation *operation, int stage, IDoneCallback *doneCallback);
 

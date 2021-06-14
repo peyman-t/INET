@@ -620,6 +620,9 @@ TCPEventCode TCPConnection::processSegment1stThru8th(TCPSegment *tcpseg)
                         msg->setKind(TCP_I_DATA);  // TBD currently we never send TCP_I_URGENT_DATA
                         TCPCommand *cmd = new TCPCommand();
 
+                        simtime_t t1 = simTime();
+                        simtime_t t2 = msg->getTimestamp();
+                        endToEndDelayVector->record(t1 - t2);
 
                         TCPRelayApp *relay = NULL;
                         opp_string str("^.relay[");

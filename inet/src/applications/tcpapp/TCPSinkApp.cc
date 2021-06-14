@@ -30,6 +30,8 @@ void TCPSinkApp::initialize(int stage)
 
     if (stage == 0)
     {
+//        endToEndDelayVector = new cOutVector("EndToEndDelayVector");
+
         bytesRcvd = 0;
         WATCH(bytesRcvd);
     }
@@ -66,6 +68,11 @@ void TCPSinkApp::handleMessage(cMessage *msg)
         long packetLength = pk->getByteLength();
         bytesRcvd += packetLength;
         emit(rcvdPkSignal, pk);
+
+//        simtime_t t1 = simTime();
+//        simtime_t t2 = msg->getTimestamp();
+//        endToEndDelayVector->record(t1 - t2);
+
         delete msg;
 
         if (ev.isGUI())

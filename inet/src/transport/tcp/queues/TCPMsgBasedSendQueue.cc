@@ -93,6 +93,9 @@ TCPSegment *TCPMsgBasedSendQueue::createSegmentWithBytes(uint32 fromSeq, ulong n
         if (!payloadName)
             payloadName = i->msg->getName();
 
+        if(i->msg->getTimestamp() == 0)
+            i->msg->setTimestamp(simTime());
+
         tcpseg->addPayloadMessage(i->msg->dup(), i->endSequenceNo);
         ++i;
     }
