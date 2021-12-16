@@ -140,7 +140,7 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     }
 
 
-    double recvCarryingCap = (state->snd_wnd) * 8;
+    double recvCarryingCap = (state->snd_wnd) * 8 * 0.98;
     double maxLinkRate = std::min(state->lgcc_phyRate, state->lgcc_minLinkRate) * 0.99;
     if(recvCarryingCap < maxLinkRate)
         state->lgcc_carryingCap = recvCarryingCap;
@@ -309,7 +309,7 @@ void LGCC::processRateUpdateTimer(TCPEventCode& event)
     if (cwndVector)
         cwndVector->record(state->snd_cwnd);
     if (rateVector)
-        rateVector->record(state->snd_cwnd * 8 / state->lastrtt);//    rateVector->record(state->lgcc_rate);
+        rateVector->record(state->lgcc_rate);//rateVector->record(state->snd_cwnd * 8 / state->lastrtt);
 
     if (brVector)
         brVector->record(state->lgcc_r);
