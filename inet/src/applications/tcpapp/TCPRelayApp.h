@@ -89,6 +89,7 @@ class INET_API TCPRelayApp : public cSimpleModule, public ILifecycle, public TCP
     long getSendQueueSize(const char * srcIPAddr);
     int getTCPOutGateIndex();
     uint32 getNextRate();
+    uint32 getNextBDP();
     std::string getNextWeights();
     std::string getNextWeights2();
     void setNextWeights(const char * weights);

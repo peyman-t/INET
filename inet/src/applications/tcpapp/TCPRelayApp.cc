@@ -381,6 +381,41 @@ uint32 TCPRelayApp::getNextRate() {
     return rate;
 }
 
+uint32 TCPRelayApp::getNextBDP() {
+    TCPConnection *conn1 = NULL;
+    uint32 rate = 0;
+
+    TCP *tcp = dynamic_cast<TCP *>(getModuleByPath("^.tcp"));
+    TCP2 *tcp2 = dynamic_cast<TCP2 *>(getModuleByPath("^.tcp2"));
+
+    std::list<TCPConnection *> l;
+
+    ForwardingMap::iterator it;
+    for(it = forwardingMap.begin(); it != forwardingMap.end(); it++) {
+        TCPSocket *s = getSendTCPSocket(it->first.c_str());
+        if(!reverse)
+            conn1 = tcp2->findConnForApp(getIndex(), s->getConnectionId());
+        else
+            conn1 = tcp->findConnForApp(getIndex(), s->getConnectionId());
+
+
+        auto lit = std::find(l.begin(), l.end(), conn1);
+        if (lit == l.end()) {
+            l.push_back(conn1);
+        } else
+            continue;
+
+        if(conn1 != NULL) {
+            TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
+            double connRate = state1->lgcc_rate / 8;
+            double bdp = connRate * state1->minrtt.dbl();
+            rate += bdp;
+        } else
+            return 0;
+    }
+    return rate;
+}
+
 std::string TCPRelayApp::getNextWeights() {
     TCPConnection *conn1 = NULL;
     double rate = 0;
@@ -640,17 +675,22 @@ void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg
     }
 
     conn->getState()->maxRcvBuffer = getNextRate();
+    uint32 nextBDP = getNextBDP();
+    double nextSendQ = getSendQueueSize(srcAddr.str().c_str());
+    double rateRatio = nextBDP / nextSendQ;
+    if(nextBDP < nextSendQ)
+            conn->getState()->maxRcvBuffer = conn->getState()->maxRcvBuffer * rateRatio;
+
     TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn->getState());
-//    state1->weights = getNextWeights();
     state1->weights = getNextWeights2();
+
     if(conn->getState()->maxRcvBuffer < 3000)
         conn->getState()->maxRcvBuffer = 3000;
     conn->getState()->maxRcvBufferChanged = true;
-
 }
 
 bool TCPRelayApp::processSegment(TCPConnection *conn, TCPSegment *tcpseg) {
-    if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+    if(strcmp(conn->tcpAlgorithm->getClassName(), "LGCC") == 0 || strcmp(conn->tcpAlgorithm->getClassName(), "LGCC2") == 0) {
         processRatesAndWeights(conn, tcpseg);
 //        markPacket(tcpseg);
 
@@ -768,7 +808,7 @@ void TCPRelayApp::handleMessage(cMessage *msg)
                 lastBytesRecv = 0;
                 lastCalcInputRate = now1;
 
-                if(strcmp(conn1->tcpAlgorithm->getClassName(), "LGCC") == 0) {
+                if(strcmp(conn1->tcpAlgorithm->getClassName(), "LGCC") == 0 || strcmp(conn1->tcpAlgorithm->getClassName(), "LGCC2") == 0) {
                     TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn1->getState());
     //                double a = 0;
     //                if(cost == 0)
