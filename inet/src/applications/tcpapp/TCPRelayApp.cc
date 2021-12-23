@@ -374,6 +374,9 @@ uint32 TCPRelayApp::getNextRate() {
 //            double sendBufferRate = (double)conn1->getSendQueue()->getBytesAvailable(conn1->getSendQueue()->getBufferStartSeq()) * 8 / state1->minrtt;
 //            if(sendBufferRate < connRate)
 //                connRate = sendBufferRate;
+            if(!state1->lgcc_pacing) {
+                connRate = state1->snd_cwnd / state1->lastrtt;
+            }
             rate += connRate;//state1->lgcc_rate * state1->lgcc_carryingCap / 8;
         } else
             return 0;

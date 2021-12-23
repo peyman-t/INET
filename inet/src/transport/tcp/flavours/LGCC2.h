@@ -50,6 +50,7 @@ class INET_API LGCC2 : public TCPTahoeRenoFamily
     virtual void processRexmitTimer(TCPEventCode& event);
     virtual void processPaceTimer(TCPEventCode& event);
     virtual void processRateUpdateTimer(TCPEventCode& event);
+    void applyNewRate(double maxLinkRate);
 
   public:
     /** Ctor */
