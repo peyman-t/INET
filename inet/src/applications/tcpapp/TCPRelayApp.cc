@@ -677,12 +677,25 @@ void TCPRelayApp::processRatesAndWeights(TCPConnection *conn, TCPSegment *tcpseg
         }
     }
 
-    conn->getState()->maxRcvBuffer = getNextRate();
+//    conn->getState()->maxRcvBuffer = getNextRate();
     uint32 nextBDP = getNextBDP();
-    double nextSendQ = getSendQueueSize(srcAddr.str().c_str());
-    double rateRatio = nextBDP / nextSendQ;
-    if(nextBDP < nextSendQ)
-            conn->getState()->maxRcvBuffer = conn->getState()->maxRcvBuffer * rateRatio;
+    double nextSendQ = getSendQueueSize(srcAddr.str().c_str()); //getSendQueueSize(srcAddr.str().c_str()) / 2
+    double rateRatio = 1;
+
+//            = nextBDP / nextSendQ;
+    double x = nextSendQ / nextBDP;
+    if(x > 1)
+        rateRatio = (1 - pow((x-1) / 2, 1.1) / 2);
+    if(x > 4.6)
+        rateRatio = 0.05;
+//    if(x > 3)
+//        rateRatio = 0.5;
+    if(x <= 1)
+        rateRatio = 1;
+
+    conn->getState()->maxRcvBuffer = getNextRate() * rateRatio;
+//    if(x > 4.4)
+//        conn->getState()->maxRcvBuffer = 3000;
 
     TCPTahoeRenoFamilyStateVariables *state1 = dynamic_cast<TCPTahoeRenoFamilyStateVariables *>(conn->getState());
     state1->weights = getNextWeights2();

@@ -98,6 +98,8 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
 
     if(state->ecnnum_cntr == 0) {
         state->ecnnum_maxRate = conn->tcpMain->par("ldatarate");
+        state->lgccPhi1 = conn->tcpMain->par("lgccPhi1");
+        state->lgccPhi2 = conn->tcpMain->par("lgccPhi2");
 
         double d = conn->tcpMain->par("param1");
         if(d != 0.0)
@@ -111,15 +113,15 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
         if (rateVector && simTime() >= conn->tcpMain->par("param3"))
             rateVector->record(state->ecnnum_Rate);
 
-        state->ecnnum_cntr++;
     }
 
     simtime_t now1 = simTime();
 
-    if(state->dctcp_marked / state->dctcp_total >= 0.9)
-        state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * (state->dctcp_marked / state->dctcp_total);
-    else
+    if(state->dctcp_marked / state->dctcp_total >= 0.9) {
+            state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * (state->dctcp_marked / state->dctcp_total);
+    } else
         state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * 0;
+
 
 //    state->ecnnum_fraction = state->dctcp_marked / state->dctcp_total;
     //state->ecnnum_fraction = 0.02 * state->dctcp_marked / state->dctcp_total + (1 - 0.02) * state->ecnnum_fraction;
@@ -150,19 +152,34 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
 //        state->ecnnum_fraction = 1 - std::pow(1 - state->ecnnum_fraction, 1.1);
 //    } else
     {
-        double q = ( -log(1-state->ecnnum_fraction)  / log(state->ecnnum_phi)); //
+//        double q = ( -log(1-state->ecnnum_fraction)  / log(state->ecnnum_phi)); //
 
         double logP = conn->tcpMain->par("param4");
         double coef = conn->tcpMain->par("param5");
 
-        double gradient = (1 - state->ecnnum_Rate / state->ecnnum_maxRate - q );
+//        double gradient = (1 - state->ecnnum_Rate / state->ecnnum_maxRate - q );
+        double gradient = (-log(state->ecnnum_Rate / state->ecnnum_maxRate) / log(state->lgccPhi1) + log(1 - state->ecnnum_fraction) / log(state->lgccPhi2));
         double gr = (pow(coef, -(state->dctcp_marked / state->dctcp_total)) * log(logP));
 //        if((gradient < 0) && (state->dctcp_marked == state->dctcp_total))
 //            gr = (pow(coef, -(0 / state->dctcp_total)) * log(logP));
 
         state->lgcc_r = gr;
+        //state->lgcc_r = 0.1;
 
-        double newRate = state->ecnnum_Rate + gr * state->ecnnum_Rate * gradient;
+        if(gr < 0.05 && state->ecnnum_fraction) {
+            double expRate = state->ecnnum_maxRate * exp(log(1 - state->ecnnum_fraction) * log(state->lgccPhi1) / log(state->lgccPhi2));
+            if(state->ecnnum_Rate < expRate - 0.015 * state->ecnnum_maxRate && expRate < state->ecnnum_maxRate) { //0.015
+                state->lgcc_r = ((expRate) - state->ecnnum_Rate) / state->ecnnum_maxRate;// * 6.66;//2.5
+            } else if(state->ecnnum_Rate > expRate + 0.015 * state->ecnnum_maxRate) {
+                if((-log(state->ecnnum_Rate / state->ecnnum_maxRate) / log(state->lgccPhi1) + log(1 - state->ecnnum_fraction) / log(state->lgccPhi2)) < 0)
+                {
+                    state->lgcc_r = (state->ecnnum_Rate - (expRate)) / state->ecnnum_maxRate;// * 6.66;//2.5
+                }
+            } else if(expRate < state->ecnnum_maxRate)
+                state->lgcc_r = state->lgcc_rConv;
+        }
+
+        double newRate = state->ecnnum_Rate + state->lgcc_r * state->ecnnum_Rate * gradient;
         if(newRate > 2 * state->ecnnum_Rate)
             state->ecnnum_Rate *= 2;
         else
@@ -180,8 +197,10 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
     uint32 newCwnd = state->snd_cwnd;
     newCwnd = state->ecnnum_Rate * (double)state->minrtt.dbl() / 8;
     newCwnd = round(newCwnd / state->snd_mss) * state->snd_mss;
-    if(newCwnd < state->snd_mss)
-        newCwnd = state->snd_mss;
+    if(newCwnd < state->snd_mss * 10) {
+        newCwnd = state->snd_mss * 10;
+        state->ecnnum_Rate = newCwnd * 8 / (double)state->minrtt.dbl();
+    }
 
 //    uint32 rCwnd = newCwnd / state->snd_mss;
 //    if(rCwnd * state->snd_mss < newCwnd) {
@@ -222,6 +241,8 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
         if (interPSpaceVector)
             interPSpaceVector->record(state->interPacketSpace);
     }
+
+    state->ecnnum_cntr++;
 
 }
 

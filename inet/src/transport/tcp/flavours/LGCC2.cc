@@ -288,8 +288,8 @@ void LGCC2::processRateUpdateTimer(TCPEventCode& event)
     }
 
     if(oldCarryingCap > state->lgcc_carryingCap && state->lgcc_cntr > 1) {
-        if(state->lgcc_rate > dualRate) {
-            state->lgcc_rate = dualRate;
+        if(state->lgcc_rate > dualRate * 0.99) {
+            state->lgcc_rate = dualRate * 0.99;
             applyNewRate(maxLinkRate);
         }
     }
