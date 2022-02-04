@@ -166,7 +166,7 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
         state->lgcc_r = gr;
         //state->lgcc_r = 0.1;
 
-        if(gr < 0.05 && state->ecnnum_fraction) {
+        if(gr < 0.19 && state->ecnnum_fraction) {
             double expRate = state->ecnnum_maxRate * exp(log(1 - state->ecnnum_fraction) * log(state->lgccPhi1) / log(state->lgccPhi2));
             if(state->ecnnum_Rate < expRate - 0.015 * state->ecnnum_maxRate && expRate < state->ecnnum_maxRate) { //0.015
                 state->lgcc_r = ((expRate) - state->ecnnum_Rate) / state->ecnnum_maxRate;// * 6.66;//2.5
