@@ -197,8 +197,8 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
     uint32 newCwnd = state->snd_cwnd;
     newCwnd = state->ecnnum_Rate * (double)state->minrtt.dbl() / 8;
     newCwnd = round(newCwnd / state->snd_mss) * state->snd_mss;
-    if(newCwnd < state->snd_mss * 10) {
-        newCwnd = state->snd_mss * 10;
+    if(newCwnd < state->snd_mss * 2) {
+        newCwnd = state->snd_mss * 2;
         state->ecnnum_Rate = newCwnd * 8 / (double)state->minrtt.dbl();
     }
 
