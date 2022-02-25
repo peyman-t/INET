@@ -140,7 +140,7 @@ bool REDDropperShQ::shouldDrop(cPacket *packet)
     const double minth = minths[i];
     const double maxth = maxths[i];
     const double maxp = maxps[i];
-    const double pkrate = pkrates[i] * 1500;
+    const double pkrate = pkrates[i] * 1500 * 0.95;
     const double mark = marks[i];
     const int queueLength = getLength();
 

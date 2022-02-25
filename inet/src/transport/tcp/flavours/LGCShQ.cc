@@ -113,11 +113,13 @@ void LGCShQ::processRateUpdateTimer(TCPEventCode& event)
         if (rateVector && simTime() >= conn->tcpMain->par("param3"))
             rateVector->record(state->ecnnum_Rate);
 
+        if(state->dctcp_marked)
+            state->ecnnum_fraction = state->dctcp_marked / state->dctcp_total;
     }
 
     simtime_t now1 = simTime();
 
-    if(state->dctcp_marked / state->dctcp_total >= 0.9) {
+    if(state->dctcp_marked / state->dctcp_total >= 0.8) {
             state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * (state->dctcp_marked / state->dctcp_total);
     } else
         state->ecnnum_fraction = (1 - state->ecnnum_alpha) * state->ecnnum_fraction + state->ecnnum_alpha * 0;
